@@ -1,18 +1,22 @@
 function fmtTime(iso, withSec = false) {
   if (!iso) return null;
-  const d = new Date(iso);
-  const hm = `${String(d.getHours()).padStart(2,'0')}시 ${String(d.getMinutes()).padStart(2,'0')}분`;
-  return withSec ? `${hm} ${String(d.getSeconds()).padStart(2,'0')}초` : hm;
+  const d = new Date(new Date(iso).getTime() + 9 * 3600000);
+  const hm = `${String(d.getUTCHours()).padStart(2,'0')}시 ${String(d.getUTCMinutes()).padStart(2,'0')}분`;
+  return withSec ? `${hm} ${String(d.getUTCSeconds()).padStart(2,'0')}초` : hm;
+}
+
+function toKSTString(d) {
+  return new Date(d.getTime() + 9 * 3600000).toISOString().slice(0, 19);
 }
 
 function nowLocal() {
   const d = new Date();
   d.setSeconds(0, 0);
-  return d.toISOString().slice(0, 16);
+  return toKSTString(d).slice(0, 16);
 }
 
 function nowWithSec() {
-  return new Date().toISOString().slice(0, 19);
+  return toKSTString(new Date());
 }
 
 function calcEstimatedDischarge(p) {
