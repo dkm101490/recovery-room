@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>회복실 관리</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="recovery-page">
+
+  <header>
+    <h1>회복실 관리</h1>
+    <div class="header-right">
+      <button class="tab-btn active" onclick="switchTab('recovery')">회복실</button>
+      <button class="tab-btn" onclick="switchTab('schedule')">수술 예정 환자</button>
+      <a href="ward.html" class="link-btn" target="_blank">병동 모니터 →</a>
+    </div>
+  </header>
+
+  <!-- ═══ 회복실 관리 탭 ═══ -->
+  <div id="tab-recovery">
+
+    <section class="admit-section">
+      <h2>환자 입실 등록</h2>
+      <div class="admit-form">
+        <div class="field-group">
+          <label>등록번호 *</label>
+          <input type="text" id="f-reg" placeholder="등록번호 입력 후 Tab"
+            autocomplete="off" onblur="lookupPatient()">
+        </div>
+        <div class="field-group">
+          <label>환자 이름 *</label>
+          <input type="text" id="f-name" placeholder="자동 입력" autocomplete="off">
+        </div>
+        <div class="field-group wide">
+          <label>수술명 *</label>
+          <input type="text" id="f-surgery" placeholder="자동 입력" autocomplete="off">
+        </div>
+        <div class="field-group">
+          <label>병동 *</label>
+          <select id="f-ward">
+            <option value="">선택</option>
+            <optgroup label="7층"><option>7층 1병동</option><option>7층 2병동</option></optgroup>
+            <optgroup label="8층"><option>8층 1병동</option><option>8층 2병동</option></optgroup>
+            <optgroup label="9층"><option>9층 1병동</option><option>분만실</option></optgroup>
+            <optgroup label="10층"><option>10층 1병동</option><option>10층 2병동</option></optgroup>
+            <optgroup label="11층"><option>11층 1병동</option><option>11층 2병동</option></optgroup>
+            <optgroup label="12층"><option>12층 1병동</option><option>12층 2병동</option></optgroup>
+            <optgroup label="13층"><option>13층 1병동</option><option>13층 2병동</option></optgroup>
+            <optgroup label="14층"><option>14층 1병동</option><option>14층 2병동</option></optgroup>
+            <optgroup label="15층"><option>15층 1병동</option><option>15층 2병동</option></optgroup>
+            <optgroup label="16층"><option>16층 1병동</option><option>16층 2병동</option></optgroup>
+            <optgroup label="17층"><option>17층 1병동</option><option>17층 2병동</option></optgroup>
+            <optgroup label="18층"><option>18층 1병동</option><option>18층 2병동</option></optgroup>
+            <optgroup label="19층"><option>19층 1병동</option><option>19층 2병동</option></optgroup>
+            <optgroup label="20층"><option>20층 1병동</option><option>20층 2병동</option></optgroup>
+            <optgroup label="21층"><option>21층 1병동</option><option>21층 2병동</option></optgroup>
+          </select>
+        </div>
+        <div class="field-group short">
+          <label>병실 *</label>
+          <input type="text" id="f-room" placeholder="예: 1101" autocomplete="off">
+        </div>
+        <div class="field-group">
+          <label>입실 시간</label>
+          <input type="datetime-local" id="f-time">
+        </div>
+        <div class="field-group align-end">
+          <button class="btn-admit" onclick="admitPatient()">입실 등록</button>
+        </div>
+      </div>
+      <div id="lookup-msg" class="lookup-msg"></div>
+    </section>
+
+    <section class="patients-section">
+      <div class="patients-header">
+        <h2>현재 환자 <span id="count">0</span>명</h2>
+      </div>
+      <div id="patients-grid"></div>
+    </section>
+
+  </div>
+
+  <!-- ═══ 수술 예정 환자 탭 ═══ -->
+  <div id="tab-schedule" class="hidden">
+
+    <section class="admit-section">
+      <h2>수술 예정 환자 등록</h2>
+      <p class="section-desc">환자 정보를 미리 등록하면 회복실 입실 시 등록번호만으로 자동 입력됩니다.</p>
+      <div class="admit-form">
+        <div class="field-group">
+          <label>등록번호 *</label>
+          <input type="text" id="s-reg" placeholder="12345678" autocomplete="off">
+        </div>
+        <div class="field-group">
+          <label>환자 이름 *</label>
+          <input type="text" id="s-name" placeholder="홍길동" autocomplete="off">
+        </div>
+        <div class="field-group wide">
+          <label>수술명 *</label>
+          <input type="text" id="s-surgery" placeholder="복강경 담낭절제술" autocomplete="off">
+        </div>
+        <div class="field-group">
+          <label>병동 *</label>
+          <select id="s-ward">
+            <option value="">선택</option>
+            <optgroup label="7층"><option>7층 1병동</option><option>7층 2병동</option></optgroup>
+            <optgroup label="8층"><option>8층 1병동</option><option>8층 2병동</option></optgroup>
+            <optgroup label="9층"><option>9층 1병동</option><option>분만실</option></optgroup>
+            <optgroup label="10층"><option>10층 1병동</option><option>10층 2병동</option></optgroup>
+            <optgroup label="11층"><option>11층 1병동</option><option>11층 2병동</option></optgroup>
+            <optgroup label="12층"><option>12층 1병동</option><option>12층 2병동</option></optgroup>
+            <optgroup label="13층"><option>13층 1병동</option><option>13층 2병동</option></optgroup>
+            <optgroup label="14층"><option>14층 1병동</option><option>14층 2병동</option></optgroup>
+            <optgroup label="15층"><option>15층 1병동</option><option>15층 2병동</option></optgroup>
+            <optgroup label="16층"><option>16층 1병동</option><option>16층 2병동</option></optgroup>
+            <optgroup label="17층"><option>17층 1병동</option><option>17층 2병동</option></optgroup>
+            <optgroup label="18층"><option>18층 1병동</option><option>18층 2병동</option></optgroup>
+            <optgroup label="19층"><option>19층 1병동</option><option>19층 2병동</option></optgroup>
+            <optgroup label="20층"><option>20층 1병동</option><option>20층 2병동</option></optgroup>
+            <optgroup label="21층"><option>21층 1병동</option><option>21층 2병동</option></optgroup>
+          </select>
+        </div>
+        <div class="field-group short">
+          <label>병실 *</label>
+          <input type="text" id="s-room" placeholder="예: 1101" autocomplete="off">
+        </div>
+        <div class="field-group align-end">
+          <button class="btn-admit" onclick="addScheduled()">등록</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="patients-section">
+      <h2>오늘 수술 예정 환자</h2>
+      <div id="scheduled-list" class="scheduled-list"></div>
+    </section>
+
+  </div>
+
+  <script src="common.js"></script>
+  <script src="recovery.js"></script>
+</body>
+</html>

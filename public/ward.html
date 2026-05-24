@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>병동 모니터</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="ward-page">
+
+  <header class="ward-header">
+    <div class="header-left">
+      <h1>병동 모니터</h1>
+      <div class="ward-selector">
+        <label>병동 선택</label>
+        <select id="ward-select" onchange="filterWard()">
+          <option value="">전체</option>
+          <optgroup label="7층"><option>7층 1병동</option><option>7층 2병동</option></optgroup>
+          <optgroup label="8층"><option>8층 1병동</option><option>8층 2병동</option></optgroup>
+          <optgroup label="9층"><option>9층 1병동</option><option>분만실</option></optgroup>
+          <optgroup label="10층"><option>10층 1병동</option><option>10층 2병동</option></optgroup>
+          <optgroup label="11층"><option>11층 1병동</option><option>11층 2병동</option></optgroup>
+          <optgroup label="12층"><option>12층 1병동</option><option>12층 2병동</option></optgroup>
+          <optgroup label="13층"><option>13층 1병동</option><option>13층 2병동</option></optgroup>
+          <optgroup label="14층"><option>14층 1병동</option><option>14층 2병동</option></optgroup>
+          <optgroup label="15층"><option>15층 1병동</option><option>15층 2병동</option></optgroup>
+          <optgroup label="16층"><option>16층 1병동</option><option>16층 2병동</option></optgroup>
+          <optgroup label="17층"><option>17층 1병동</option><option>17층 2병동</option></optgroup>
+          <optgroup label="18층"><option>18층 1병동</option><option>18층 2병동</option></optgroup>
+          <optgroup label="19층"><option>19층 1병동</option><option>19층 2병동</option></optgroup>
+          <optgroup label="20층"><option>20층 1병동</option><option>20층 2병동</option></optgroup>
+          <optgroup label="21층"><option>21층 1병동</option><option>21층 2병동</option></optgroup>
+        </select>
+      </div>
+    </div>
+    <div id="conn-dot" class="conn-dot disconnected" title="서버 연결 상태"></div>
+  </header>
+
+  <div id="empty-state" class="empty-state">현재 회복실에 입실 중인 환자가 없습니다.</div>
+  <div id="ward-list"></div>
+
+  <script src="common.js"></script>
+  <script src="ward.js"></script>
+</body>
+</html>

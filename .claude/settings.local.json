@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Stop-Process)",
+      "Bash(node server.js)",
+      "Bash(curl -s http://localhost:3000/api/patients)",
+      "Bash(date '+%Y-%m-%dT%H:%M' -d '-35 minutes')",
+      "Bash(python3 -c \"from datetime import datetime, timedelta; print\\(\\(datetime.now\\(\\)-timedelta\\(minutes=35\\)\\).strftime\\('%Y-%m-%dT%H:%M'\\)\\)\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/patients -H 'Content-Type: application/json' -d '{\"name\":\"김철수\",\"reg_no\":\"20241234\",\"surgery\":\"복강경 담낭절제술\",\"ward\":\"11층 1병동\",\"admit_time\":\"__TRACKED_VAR__\"}')",
+      "Bash(node -e \"const d=require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\); const p=JSON.parse\\(d\\); console.log\\('등록됨 id:'+p.id+' 예상퇴실:'+p.estimated_discharge\\);\")",
+      "Bash(git init *)",
+      "Bash(echo \"node_modules/\")",
+      "Bash(echo \"*.db\")",
+      "Bash(git add *)"
+    ]
+  }
+}
