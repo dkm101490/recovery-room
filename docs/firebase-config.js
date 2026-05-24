@@ -1,12 +1,11 @@
-// firebase.google.com 에서 프로젝트 생성 후 아래 값을 채워주세요
 const firebaseConfig = {
-  apiKey: "REPLACE_ME",
-  authDomain: "REPLACE_ME.firebaseapp.com",
-  databaseURL: "https://REPLACE_ME-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "REPLACE_ME",
-  storageBucket: "REPLACE_ME.appspot.com",
-  messagingSenderId: "REPLACE_ME",
-  appId: "REPLACE_ME"
+  apiKey: "AIzaSyDr8vJa2LecT6I5IB2LGLcPkPihJIsSsyM",
+  authDomain: "recovery-room-b64e0.firebaseapp.com",
+  databaseURL: "https://recovery-room-b64e0-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "recovery-room-b64e0",
+  storageBucket: "recovery-room-b64e0.firebasestorage.app",
+  messagingSenderId: "238238193044",
+  appId: "1:238238193044:web:fb53605178b51a7f6deb81"
 };
 
 firebase.initializeApp(firebaseConfig);
