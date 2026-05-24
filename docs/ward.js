@@ -2,28 +2,19 @@ let patients = [];
 let selectedWard = '';
 let notifiedIds = new Set();
 
-const wsProto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-const ws = new WebSocket(`${wsProto}//${location.host}`);
+const patientsRef = db.ref('patients');
 const connDot = document.getElementById('conn-dot');
 
-ws.onopen  = () => connDot.className = 'conn-dot connected';
-ws.onclose = () => connDot.className = 'conn-dot disconnected';
+db.ref('.info/connected').on('value', snap => {
+  connDot.className = snap.val() ? 'conn-dot connected' : 'conn-dot disconnected';
+});
 
-ws.onmessage = e => {
-  const msg = JSON.parse(e.data);
-  if      (msg.type === 'init')               { patients = msg.patients; render(); }
-  else if (msg.type === 'patient_added')      { patients.unshift(msg.patient); render(); }
-  else if (msg.type === 'patient_updated')    {
-    const i = patients.findIndex(p => p.id === msg.patient.id);
-    if (i !== -1) patients[i] = msg.patient;
-    render(); triggerAlerts();
-  }
-  else if (msg.type === 'patient_discharged') {
-    patients = patients.filter(p => p.id !== msg.id);
-    notifiedIds.delete(msg.id);
-    render();
-  }
-};
+patientsRef.on('value', snapshot => {
+  const data = snapshot.val() || {};
+  patients = Object.entries(data).map(([id, p]) => withEst({ id, ...p }));
+  render();
+  triggerAlerts();
+});
 
 setInterval(() => { render(); triggerAlerts(); }, 30000);
 
@@ -44,7 +35,6 @@ function render() {
   if (!vis.length) { empty.style.display = 'flex'; list.innerHTML = ''; return; }
   empty.style.display = 'none';
 
-  // 병실별 그룹
   const byRoom = {};
   vis.forEach(p => {
     const key = p.room;
@@ -52,7 +42,6 @@ function render() {
     byRoom[key].push(p);
   });
 
-  // 병실 번호 순 정렬
   const sorted = Object.entries(byRoom).sort((a, b) => {
     const numA = parseInt(a[0]) || 0;
     const numB = parseInt(b[0]) || 0;
@@ -74,7 +63,6 @@ function buildCard(p) {
   const admitStr = fmtTime(p.admit_time);
   const estStr   = p.estimated_discharge ? fmtTime(p.estimated_discharge) : null;
 
-  // 메인 메시지
   let mainMsg = '';
   if (p.special === 'icu' || p.special === 'unstable') {
     mainMsg = `환자분이 <b>${admitStr}</b>에 회복실에 입실하셨습니다.`;
@@ -82,7 +70,6 @@ function buildCard(p) {
     mainMsg = `환자분이 <b>${admitStr}</b>에 회복실에 입실하셨습니다.<br>(40분 후) 예상 퇴실시간 <b>${estStr || '계산 중'}</b> 입니다.`;
   }
 
-  // 투약 목록
   const drugs = [];
   if (p.fentanyl_time)    drugs.push(`구연산펜타닐 50mcg &nbsp;<b>${fmtTime(p.fentanyl_time)}</b> 투약`);
   if (p.pethidine_time)   drugs.push(`제일페티딘염산염 25mg &nbsp;<b>${fmtTime(p.pethidine_time)}</b> 투약`);

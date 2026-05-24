@@ -11,7 +11,11 @@
       "Bash(git init *)",
       "Bash(echo \"node_modules/\")",
       "Bash(echo \"*.db\")",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git branch *)",
+      "Bash(git remote *)",
+      "Bash(git push *)"
     ]
   }
 }

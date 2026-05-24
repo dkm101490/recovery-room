@@ -2,34 +2,25 @@ let patients = [];
 let scheduledList = [];
 let currentTab = 'recovery';
 
-const wsProto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-const ws = new WebSocket(`${wsProto}//${location.host}`);
+const patientsRef = db.ref('patients');
+const scheduledRef = db.ref('scheduled_patients');
 
-// 입실시간 = 현재 시간으로 자동 유지 (매 분 갱신)
 function refreshAdmitTime() {
   document.getElementById('f-time').value = nowLocal();
 }
 refreshAdmitTime();
 setInterval(refreshAdmitTime, 60000);
 
-ws.onmessage = e => {
-  const msg = JSON.parse(e.data);
-  if      (msg.type === 'init')              { patients = msg.patients; renderPatients(); }
-  else if (msg.type === 'patient_added')     { patients.unshift(msg.patient); renderPatients(); }
-  else if (msg.type === 'patient_updated')   {
-    const i = patients.findIndex(p => p.id === msg.patient.id);
-    if (i !== -1) patients[i] = msg.patient;
-    renderPatients();
-  }
-  else if (msg.type === 'patient_discharged') {
-    patients = patients.filter(p => p.id !== msg.id);
-    renderPatients();
-  }
-};
+patientsRef.on('value', snapshot => {
+  const data = snapshot.val() || {};
+  patients = Object.entries(data)
+    .map(([id, p]) => withEst({ id, ...p }))
+    .sort((a, b) => a.ward.localeCompare(b.ward) || new Date(b.admit_time) - new Date(a.admit_time));
+  renderPatients();
+});
 
 setInterval(renderPatients, 30000);
 
-// ── 탭 전환 ──
 function switchTab(tab) {
   currentTab = tab;
   document.getElementById('tab-recovery').classList.toggle('hidden', tab !== 'recovery');
@@ -40,12 +31,13 @@ function switchTab(tab) {
   if (tab === 'schedule') loadScheduled();
 }
 
-// ── 등록번호로 환자 자동조회 ──
 async function lookupPatient() {
   const reg = document.getElementById('f-reg').value.trim();
   if (!reg) return;
-  const res = await fetch(`/api/lookup?q=${encodeURIComponent(reg)}`);
-  const p = await res.json();
+  const snapshot = await scheduledRef.once('value');
+  const data = snapshot.val() || {};
+  const all = Object.values(data);
+  const p = all.find(p => p.reg_no === reg || p.name.includes(reg));
   const msg = document.getElementById('lookup-msg');
   if (p) {
     document.getElementById('f-name').value    = p.name;
@@ -61,54 +53,37 @@ async function lookupPatient() {
   setTimeout(() => { msg.textContent = ''; msg.className = 'lookup-msg'; }, 3000);
 }
 
-// ── 입실 등록 ──
 async function admitPatient() {
-  const name     = document.getElementById('f-name').value.trim();
-  const reg_no   = document.getElementById('f-reg').value.trim();
-  const surgery  = document.getElementById('f-surgery').value.trim();
-  const ward     = document.getElementById('f-ward').value;
-  const room     = document.getElementById('f-room').value.trim();
+  const name       = document.getElementById('f-name').value.trim();
+  const reg_no     = document.getElementById('f-reg').value.trim();
+  const surgery    = document.getElementById('f-surgery').value.trim();
+  const ward       = document.getElementById('f-ward').value;
+  const room       = document.getElementById('f-room').value.trim();
   const admit_time = document.getElementById('f-time').value || nowLocal();
 
   if (!name || !reg_no || !surgery || !ward || !room) {
     alert('모든 항목을 입력해주세요.'); return;
   }
-  const res = await fetch('/api/patients', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, reg_no, surgery, ward, room, admit_time })
-  });
-  if (res.ok) {
-    ['f-name','f-reg','f-surgery','f-room'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('f-ward').value = '';
-    document.getElementById('f-time').value = nowLocal();
-    document.getElementById('f-reg').focus();
-  }
+  await patientsRef.push({ name, reg_no, surgery, ward, room, admit_time, status: 'recovering' });
+  ['f-name','f-reg','f-surgery','f-room'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-ward').value = '';
+  document.getElementById('f-time').value = nowLocal();
+  document.getElementById('f-reg').focus();
 }
 
-// ── 약물 투여 (재투여 가능 — 초 단위까지 기록해서 재투여 시 시간 변화 보임) ──
 async function recordDrug(id, field) {
-  await patch(id, { [field]: nowWithSec() });
+  await db.ref(`patients/${id}`).update({ [field]: nowWithSec() });
 }
 
 async function setSpecial(id, val) {
-  await patch(id, { special: val });
-}
-
-async function patch(id, body) {
-  await fetch(`/api/patients/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
+  await db.ref(`patients/${id}`).update({ special: val || null });
 }
 
 async function discharge(id, name) {
   if (!confirm(`${name} 환자를 퇴실 처리하시겠습니까?`)) return;
-  await fetch(`/api/patients/${id}`, { method: 'DELETE' });
+  await db.ref(`patients/${id}`).remove();
 }
 
-// ── 환자 목록 렌더 (병동별 그룹) ──
 function renderPatients() {
   document.getElementById('count').textContent = patients.length;
   const grid = document.getElementById('patients-grid');
@@ -118,7 +93,6 @@ function renderPatients() {
     return;
   }
 
-  // 병동별 그룹
   const byWard = {};
   patients.forEach(p => {
     if (!byWard[p.ward]) byWard[p.ward] = [];
@@ -171,36 +145,36 @@ function renderCard(p) {
     <div class="r-actions">
       <div class="r-btn-row">
         <button class="r-btn drug ${p.fentanyl_time?'given':''}"
-          onclick="recordDrug(${p.id},'fentanyl_time')">
+          onclick="recordDrug('${p.id}','fentanyl_time')">
           구연산펜타닐 50mcg${p.fentanyl_time ? ` ✓ ${fmtTime(p.fentanyl_time, true)}` : ''}
         </button>
         <button class="r-btn drug ${p.pethidine_time?'given':''}"
-          onclick="recordDrug(${p.id},'pethidine_time')">
+          onclick="recordDrug('${p.id}','pethidine_time')">
           제일페티딘염산염 25mg${p.pethidine_time ? ` ✓ ${fmtTime(p.pethidine_time, true)}` : ''}
         </button>
       </div>
       <div class="r-btn-row">
         <button class="r-btn antiemetic ${p.ondansetron_time?'given':''}"
-          onclick="recordDrug(${p.id},'ondansetron_time')">
+          onclick="recordDrug('${p.id}','ondansetron_time')">
           온세란주 4mg${p.ondansetron_time ? ` ✓ ${fmtTime(p.ondansetron_time, true)}` : ''}
         </button>
         <button class="r-btn antiemetic ${p.mekool_time?'given':''}"
-          onclick="recordDrug(${p.id},'mekool_time')">
+          onclick="recordDrug('${p.id}','mekool_time')">
           멕쿨주 10mg${p.mekool_time ? ` ✓ ${fmtTime(p.mekool_time, true)}` : ''}
         </button>
       </div>
       <div class="r-btn-row">
         <button class="r-btn special warn ${p.special==='unstable'?'active':''}"
-          onclick="setSpecial(${p.id}, '${p.special==='unstable'?'':'unstable'}')">
+          onclick="setSpecial('${p.id}', '${p.special==='unstable'?'':'unstable'}')">
           ${p.special==='unstable' ? '⚠ 바이탈 불안정 (해제)' : '바이탈 불안정'}
         </button>
         <button class="r-btn special danger ${p.special==='icu'?'active':''}"
-          onclick="setSpecial(${p.id}, '${p.special==='icu'?'':'icu'}')">
+          onclick="setSpecial('${p.id}', '${p.special==='icu'?'':'icu'}')">
           ${p.special==='icu' ? '🔴 중환자실 예정 (해제)' : '중환자실 입실 예정'}
         </button>
       </div>
       <div class="r-btn-row">
-        <button class="r-btn discharge" onclick="discharge(${p.id},'${p.name}')">퇴실 처리</button>
+        <button class="r-btn discharge" onclick="discharge('${p.id}','${p.name}')">퇴실 처리</button>
       </div>
     </div>
   </div>`;
@@ -210,10 +184,10 @@ function drugLabel(field) {
   return { fentanyl_time:'펜타닐', pethidine_time:'페티딘', ondansetron_time:'온세란', mekool_time:'멕쿨' }[field];
 }
 
-// ── 수술 예정 환자 ──
 async function loadScheduled() {
-  const res = await fetch('/api/scheduled');
-  scheduledList = await res.json();
+  const snapshot = await scheduledRef.once('value');
+  const data = snapshot.val() || {};
+  scheduledList = Object.entries(data).map(([id, p]) => ({ id, ...p }));
   renderScheduled();
 }
 
@@ -229,7 +203,7 @@ function renderScheduled() {
       <span class="s-surgery">${p.surgery}</span>
       <span class="s-ward">${p.ward}</span>
       <span class="s-room">${p.room}호</span>
-      <button class="s-del-btn" onclick="deleteScheduled(${p.id})">삭제</button>
+      <button class="s-del-btn" onclick="deleteScheduled('${p.id}')">삭제</button>
     </div>
   `).join('');
 }
@@ -243,22 +217,17 @@ async function addScheduled() {
   if (!name || !reg_no || !surgery || !ward || !room) {
     alert('모든 항목을 입력해주세요.'); return;
   }
-  await fetch('/api/scheduled', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, reg_no, surgery, ward, room })
-  });
+  await scheduledRef.push({ name, reg_no, surgery, ward, room });
   ['s-name','s-reg','s-surgery','s-room'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('s-ward').value = '';
   loadScheduled();
 }
 
 async function deleteScheduled(id) {
-  await fetch(`/api/scheduled/${id}`, { method: 'DELETE' });
+  await db.ref(`scheduled_patients/${id}`).remove();
   loadScheduled();
 }
 
-// Enter 키 입실 등록
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.closest('.admit-form')) {
     if (currentTab === 'recovery') admitPatient();
