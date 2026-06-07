@@ -27,10 +27,30 @@ function visible() {
   return selectedWard ? patients.filter(p => p.ward === selectedWard) : patients;
 }
 
+function updateAIDashboard(vis) {
+  const total = vis.length;
+  const ready = vis.filter(p => calcStatus(p).type === 'ready').length;
+
+  document.getElementById('ai-total').textContent = total + '명';
+  document.getElementById('ai-ready').textContent = ready + '명';
+
+  const avgEl = document.getElementById('ai-avg-stay');
+  if (total > 0) {
+    const avg = Math.round(vis.reduce((s, p) => s + getElapsedMin(p.admit_time), 0) / total);
+    avgEl.textContent = avg <= 60 ? `${avg}분 (정상)` : `${avg}분 (지연)`;
+    avgEl.className = 'ai-badge ' + (avg <= 60 ? 'ai-blue' : 'ai-orange');
+  } else {
+    avgEl.textContent = '—';
+    avgEl.className = 'ai-badge ai-blue';
+  }
+}
+
 function render() {
   const list  = document.getElementById('ward-list');
   const empty = document.getElementById('empty-state');
   const vis   = visible();
+
+  updateAIDashboard(vis);
 
   if (!vis.length) { empty.style.display = 'flex'; list.innerHTML = ''; return; }
   empty.style.display = 'none';

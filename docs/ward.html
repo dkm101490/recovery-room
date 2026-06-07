@@ -36,6 +36,32 @@
     <div id="conn-dot" class="conn-dot disconnected" title="서버 연결 상태"></div>
   </header>
 
+  <!-- ═══ AI 실시간 회복실 자원 관리 대시보드 ═══ -->
+  <div class="ai-dashboard">
+    <span class="ai-title">🤖 AI 실시간 분석</span>
+    <div class="ai-stats">
+      <div class="ai-stat">
+        <span class="ai-label">현재 회복실 총원</span>
+        <span class="ai-val" id="ai-total">—</span>
+      </div>
+      <span class="ai-divider"></span>
+      <div class="ai-stat">
+        <span class="ai-label">30분 내 퇴실 예정</span>
+        <span class="ai-badge ai-green" id="ai-ready">—</span>
+      </div>
+      <span class="ai-divider"></span>
+      <div class="ai-stat">
+        <span class="ai-label">AI 예측 평균 체류시간</span>
+        <span class="ai-badge ai-blue" id="ai-avg-stay">—</span>
+      </div>
+      <span class="ai-divider"></span>
+      <div class="ai-stat">
+        <span class="ai-label">병동 침상 정체도</span>
+        <span class="ai-badge ai-yellow">⚠ 주의 <em>(12층 1병동 인계 지연 중)</em></span>
+      </div>
+    </div>
+  </div>
+
   <div id="empty-state" class="empty-state">현재 회복실에 입실 중인 환자가 없습니다.</div>
   <div id="ward-list"></div>
 
