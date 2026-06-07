@@ -37,12 +37,30 @@
   </header>
 
   <!-- ═══ AI 실시간 회복실 자원 관리 대시보드 ═══ -->
-  <div class="ai-bar">
-    <span class="ai-bar-title">🤖 AI 실시간 분석</span>
-    <span class="ai-chip ai-chip-gray">총원&nbsp;<strong id="ai-total">0명</strong></span>
-    <span class="ai-chip ai-chip-green">퇴실예정&nbsp;<strong id="ai-ready">0명</strong></span>
-    <span class="ai-chip ai-chip-blue">평균체류&nbsp;<strong id="ai-avg-stay">계산 중</strong></span>
-    <span class="ai-chip ai-chip-orange">⚠&nbsp;침상정체&nbsp;<strong>주의</strong>&nbsp;<small>(12층 1병동 인계 지연)</small></span>
+  <div class="ai-dashboard">
+    <div class="ai-item">
+      <span class="ai-main-title">🤖 AI 실시간 분석</span>
+    </div>
+    <div class="ai-sep"></div>
+    <div class="ai-item">
+      <span class="ai-item-label">현재 회복실 총원</span>
+      <span class="ai-badge ai-badge-blue" id="ai-total">0명</span>
+    </div>
+    <div class="ai-sep"></div>
+    <div class="ai-item">
+      <span class="ai-item-label">30분 내 퇴실 예정</span>
+      <span class="ai-badge ai-badge-green" id="ai-ready">0명</span>
+    </div>
+    <div class="ai-sep"></div>
+    <div class="ai-item">
+      <span class="ai-item-label">AI 예측 평균 체류시간</span>
+      <span class="ai-badge ai-badge-sky">45분 (정상)</span>
+    </div>
+    <div class="ai-sep"></div>
+    <div class="ai-item">
+      <span class="ai-item-label">병동 침상 정체도</span>
+      <span class="ai-badge ai-badge-orange">⚠ 주의 (12층 1병동)</span>
+    </div>
   </div>
 
   <div id="empty-state" class="empty-state">현재 회복실에 입실 중인 환자가 없습니다.</div>

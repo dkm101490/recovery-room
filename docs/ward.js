@@ -30,20 +30,8 @@ function visible() {
 function updateAIDashboard(vis) {
   const total = vis.length;
   const ready = vis.filter(p => calcStatus(p).type === 'ready').length;
-
   document.getElementById('ai-total').textContent = total + '명';
   document.getElementById('ai-ready').textContent = ready + '명';
-
-  const avgEl = document.getElementById('ai-avg-stay');
-  const avgChip = avgEl.closest('.ai-chip');
-  if (total > 0) {
-    const avg = Math.floor(Math.random() * 7) + 42; // 42~48분
-    avgEl.textContent = `${avg}분 (정상)`;
-    avgChip.className = 'ai-chip ai-chip-blue';
-  } else {
-    avgEl.textContent = '계산 중';
-    avgChip.className = 'ai-chip ai-chip-blue';
-  }
 }
 
 function render() {
