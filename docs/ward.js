@@ -62,6 +62,9 @@ function buildCard(p) {
   const st = calcStatus(p);
   const admitStr = fmtTime(p.admit_time);
   const estStr   = p.estimated_discharge ? fmtTime(p.estimated_discharge) : null;
+  const bgClass  = p.special === 'unstable' ? 'card-bg-unstable'
+                 : p.special === 'icu'      ? 'card-bg-icu'
+                 : '';
 
   let mainMsg = '';
   if (p.special === 'icu' || p.special === 'unstable') {
@@ -86,7 +89,7 @@ function buildCard(p) {
     ? `<div class="w-ready-banner">✅ 퇴실 준비 완료</div>` : '';
 
   return `
-  <div class="w-card status-${st.color}">
+  <div class="w-card status-${st.color} ${bgClass}">
     <div class="w-card-header">
       <div class="w-patient-info">
         <span class="w-name">${p.name}</span>

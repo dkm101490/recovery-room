@@ -112,6 +112,9 @@ function renderPatients() {
 function renderCard(p) {
   const st = calcStatus(p);
   const elapsed = getElapsedMin(p.admit_time);
+  const bgClass = p.special === 'unstable' ? 'card-bg-unstable'
+                : p.special === 'icu'      ? 'card-bg-icu'
+                : '';
 
   let estLabel = '';
   if      (p.special === 'icu')      estLabel = '중환자실 입실 예정';
@@ -125,7 +128,7 @@ function renderCard(p) {
   const drugTime = field => p[field] ? `<span class="drug-tag">${drugLabel(field)} ${fmtTime(p[field], true)}</span>` : '';
 
   return `
-  <div class="r-card status-${st.color}">
+  <div class="r-card status-${st.color} ${bgClass}">
     <div class="r-top">
       <div class="r-identity">
         <span class="r-name">${p.name}</span>
