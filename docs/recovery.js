@@ -177,6 +177,7 @@ function renderCard(p) {
         </button>
       </div>
       <div class="r-btn-row">
+        <button class="r-btn ai-handover" onclick="showHandover('${p.id}')">🤖 AI 인계 요약</button>
         <button class="r-btn discharge" onclick="discharge('${p.id}','${p.name}')">퇴실 처리</button>
       </div>
     </div>
@@ -236,4 +237,93 @@ document.addEventListener('keydown', e => {
     if (currentTab === 'recovery') admitPatient();
     else addScheduled();
   }
+  if (e.key === 'Escape') closeHandover();
 });
+
+/* ═══ AI 인계 요약 ═══ */
+function generateHandoverScript(p) {
+  try {
+    const elapsed  = getElapsedMin(p.admit_time);
+    const elapsedStr = elapsed >= 60
+      ? `${Math.floor(elapsed / 60)}시간 ${elapsed % 60}분`
+      : `${elapsed}분`;
+
+    const drugs = [];
+    if (p.fentanyl_time)    drugs.push(`구연산펜타닐 50mcg (${fmtTime(p.fentanyl_time, true)} 투약)`);
+    if (p.pethidine_time)   drugs.push(`제일페티딘염산염 25mg (${fmtTime(p.pethidine_time, true)} 투약)`);
+    if (p.ondansetron_time) drugs.push(`온세란주 4mg (${fmtTime(p.ondansetron_time, true)} 투약)`);
+    if (p.mekool_time)      drugs.push(`멕쿨주 10mg (${fmtTime(p.mekool_time, true)} 투약)`);
+    const drugStr = drugs.length
+      ? drugs.map(d => `  · ${d}`).join('\n')
+      : '  · 별도 투약 없음';
+
+    if (p.special === 'icu') {
+      return `안녕하세요, 중환자실입니다.
+${p.name} 환자분 중환자실 입실 예정으로 인계드리겠습니다.
+
+현재 ${p.surgery} 수술 후 회복실 입실하셨으며,
+회복실 체류 ${elapsedStr} 중 환자 상태 불안정하여
+중환자실 입실이 필요한 상황입니다.
+
+회복실 투약 내역:
+${drugStr}
+
+침대 및 이송 준비 부탁드리겠습니다. 감사합니다.
+
+병실: ${p.room}호 | 병동: ${p.ward}`;
+    }
+
+    const vitalLine = p.special === 'unstable'
+      ? '바이탈이 한차례 흔들려 안정화 대기하느라 퇴실이 다소 지연되었으나,\n현재 안정화 완료되어 퇴실 가능한 상태입니다'
+      : '바이탈 stable하게 잘 유지되었습니다';
+
+    return `안녕하세요, 선생님. 회복실입니다.
+${p.name} 환자분 퇴실 준비 완료되어 인계드리겠습니다.
+
+현재 ${p.surgery} 수술 후 입실하셨고,
+회복실 체류 ${elapsedStr} 만에 ${vitalLine}.
+
+회복실 투약 내역:
+${drugStr}
+
+마지막 투약 후 관찰 시간 모두 정상적으로 충족했습니다.
+환자분 지금 병동으로 이동하셔도 좋습니다.
+
+병실: ${p.room}호 | 병동: ${p.ward}`;
+  } catch (e) {
+    return '인계 스크립트 생성 중 오류가 발생했습니다.';
+  }
+}
+
+function showHandover(id) {
+  try {
+    const p = patients.find(pt => pt.id === id);
+    if (!p) return;
+    document.getElementById('handover-text').textContent = generateHandoverScript(p);
+    document.getElementById('handover-modal').classList.add('open');
+  } catch (e) {
+    console.error('AI 인계 요약 오류:', e);
+  }
+}
+
+function closeHandover() {
+  document.getElementById('handover-modal').classList.remove('open');
+}
+
+function closeHandoverOverlay(e) {
+  if (e.target === document.getElementById('handover-modal')) closeHandover();
+}
+
+function copyHandover() {
+  try {
+    const text = document.getElementById('handover-text').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.querySelector('.hm-copy-btn');
+      const orig = btn.textContent;
+      btn.textContent = '✓ 복사됨!';
+      setTimeout(() => { btn.textContent = orig; }, 2000);
+    });
+  } catch (e) {
+    console.error('복사 실패:', e);
+  }
+}

@@ -298,6 +298,61 @@ header h1 { font-size: 1.1rem; font-weight: 700; }
   50%       { background: #9ae6b4; box-shadow: 0 0 0 7px rgba(56,161,105,0); }
 }
 
+/* ══════════ AI HANDOVER MODAL ══════════ */
+.hm-overlay {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.48);
+  align-items: center; justify-content: center;
+}
+.hm-overlay.open { display: flex; }
+.hm-box {
+  background: white; border-radius: 14px;
+  width: min(580px, 92vw);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.22);
+  overflow: hidden; animation: hm-in 0.18s ease;
+}
+@keyframes hm-in {
+  from { transform: scale(0.94); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+.hm-header {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #553c9a; color: white; padding: 14px 20px;
+}
+.hm-title { font-size: 0.95rem; font-weight: 700; }
+.hm-close {
+  background: none; border: none; color: white;
+  font-size: 1.1rem; cursor: pointer; line-height: 1; opacity: 0.8;
+}
+.hm-close:hover { opacity: 1; }
+.hm-body {
+  padding: 22px 24px; font-size: 0.9rem; line-height: 2;
+  color: #2d3748; white-space: pre-wrap;
+  max-height: 58vh; overflow-y: auto;
+  background: #fafafa; border-bottom: 1px solid #e2e8f0;
+}
+.hm-footer {
+  display: flex; justify-content: flex-end; gap: 8px;
+  padding: 12px 20px; background: white;
+}
+.hm-copy-btn {
+  padding: 7px 18px; border-radius: 8px;
+  border: 1.5px solid #553c9a; background: white;
+  color: #553c9a; font-size: 0.85rem; font-family: inherit;
+  font-weight: 600; cursor: pointer; transition: background 0.15s;
+}
+.hm-copy-btn:hover { background: #f3eeff; }
+.hm-close-btn {
+  padding: 7px 18px; border-radius: 8px; border: none;
+  background: #4a5568; color: white; font-size: 0.85rem;
+  font-family: inherit; font-weight: 600; cursor: pointer;
+  transition: background 0.15s;
+}
+.hm-close-btn:hover { background: #2d3748; }
+
+.r-btn.ai-handover       { background: #553c9a; color: white; }
+.r-btn.ai-handover:hover { filter: brightness(1.12); }
+
 /* ══════════ COMMON ══════════ */
 .empty-msg {
   text-align: center; padding: 40px; color: #a0aec0; font-size: 0.9rem;

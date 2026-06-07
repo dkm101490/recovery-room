@@ -138,6 +138,21 @@
 
   </div>
 
+  <!-- ═══ AI 인계 요약 모달 ═══ -->
+  <div id="handover-modal" class="hm-overlay" onclick="closeHandoverOverlay(event)">
+    <div class="hm-box">
+      <div class="hm-header">
+        <span class="hm-title">🤖 AI 기반 병동 인계 스크립트 요약</span>
+        <button class="hm-close" onclick="closeHandover()">✕</button>
+      </div>
+      <div class="hm-body" id="handover-text"></div>
+      <div class="hm-footer">
+        <button class="hm-copy-btn" onclick="copyHandover()">📋 복사</button>
+        <button class="hm-close-btn" onclick="closeHandover()">닫기</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="firebase-config.js"></script>
