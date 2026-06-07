@@ -35,13 +35,14 @@ function updateAIDashboard(vis) {
   document.getElementById('ai-ready').textContent = ready + '명';
 
   const avgEl = document.getElementById('ai-avg-stay');
+  const avgChip = avgEl.closest('.ai-chip');
   if (total > 0) {
     const avg = Math.round(vis.reduce((s, p) => s + getElapsedMin(p.admit_time), 0) / total);
     avgEl.textContent = avg <= 60 ? `${avg}분 (정상)` : `${avg}분 (지연)`;
-    avgEl.className = 'ai-badge ' + (avg <= 60 ? 'ai-blue' : 'ai-orange');
+    avgChip.className = 'ai-chip ' + (avg <= 60 ? 'ai-chip-blue' : 'ai-chip-orange');
   } else {
-    avgEl.textContent = '—';
-    avgEl.className = 'ai-badge ai-blue';
+    avgEl.textContent = '계산 중';
+    avgChip.className = 'ai-chip ai-chip-blue';
   }
 }
 

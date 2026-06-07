@@ -191,35 +191,31 @@ header h1 { font-size: 1.1rem; font-weight: 700; }
 .s-del-btn:hover { background: #fed7d7; }
 
 /* ══════════ AI DASHBOARD BAR ══════════ */
-.ai-dashboard {
-  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
-  padding: 7px 24px;
-  background: linear-gradient(90deg, #eef2f7 0%, #f0f4f8 100%);
-  border-bottom: 1px solid #dbe4ee;
+.ai-bar {
+  display: flex; align-items: center; flex-wrap: nowrap;
+  gap: 7px; padding: 7px 20px;
+  background: #f7fafc; border-bottom: 1px solid #e2e8f0;
+  overflow-x: auto; white-space: nowrap;
 }
-.ai-title {
-  font-size: 0.73rem; font-weight: 800; color: #2b6cb0;
-  letter-spacing: 0.02em; white-space: nowrap; flex-shrink: 0;
+.ai-bar::-webkit-scrollbar { display: none; }
+.ai-bar-title {
+  font-size: 0.7rem; font-weight: 800; color: #2b6cb0;
+  white-space: nowrap; flex-shrink: 0;
+  padding-right: 10px; margin-right: 3px;
+  border-right: 1.5px solid #cbd5e0;
 }
-.ai-stats {
-  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex: 1;
+.ai-chip {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 0.7rem; font-weight: 500;
+  white-space: nowrap; flex-shrink: 0; line-height: 1.4;
 }
-.ai-stat  { display: flex; align-items: center; gap: 5px; }
-.ai-label { font-size: 0.7rem; color: #718096; white-space: nowrap; }
-.ai-val   { font-size: 0.75rem; font-weight: 700; color: #2d3748; }
-.ai-badge {
-  display: inline-block; font-size: 0.7rem; font-weight: 700;
-  padding: 2px 8px; border-radius: 20px; white-space: nowrap;
-}
-.ai-badge em { font-style: normal; font-weight: 500; }
-.ai-green  { background: #c6f6d5; color: #22543d; }
-.ai-blue   { background: #bee3f8; color: #2c5282; }
-.ai-yellow { background: #fefcbf; color: #744210; }
-.ai-orange { background: #feebc8; color: #7b341e; }
-.ai-divider {
-  display: inline-block; width: 1px; height: 14px;
-  background: #cbd5e0; flex-shrink: 0;
-}
+.ai-chip strong { font-weight: 700; margin-left: 1px; }
+.ai-chip small  { font-size: 0.64rem; opacity: 0.85; margin-left: 2px; }
+.ai-chip-gray   { background: #edf2f7; color: #4a5568; }
+.ai-chip-green  { background: #c6f6d5; color: #22543d; }
+.ai-chip-blue   { background: #bee3f8; color: #2c5282; }
+.ai-chip-orange { background: #feebc8; color: #7b341e; }
 
 /* ══════════ WARD PAGE ══════════ */
 .ward-page   { background: #f8f9fa; color: #1a202c; }
