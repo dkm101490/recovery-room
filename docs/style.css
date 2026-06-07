@@ -97,10 +97,10 @@ header h1 { font-size: 1.1rem; font-weight: 700; }
 .r-card.status-red    { border-left-color: #c53030; }
 .r-card.status-blue   { border-left-color: #3182ce; }
 
-/* 바이탈 불안정 — 옅은 살구색~연노란색 그라데이션 */
-.card-bg-unstable { background: linear-gradient(145deg, #fffaf0 0%, #fef9c3 100%) !important; }
-/* 중환자실 입실 예정 — 옅은 핑크~붉은 빛 그라데이션 */
-.card-bg-icu      { background: linear-gradient(145deg, #fff5f5 0%, #ffe4e6 100%) !important; }
+/* 바이탈 불안정 — 연노랑~살구색 그라데이션 */
+.card-bg-unstable { background: linear-gradient(135deg, #fffae0 0%, #ffebcd 100%) !important; }
+/* 중환자실 입실 예정 — 핑크~연한 붉은색 그라데이션 */
+.card-bg-icu      { background: linear-gradient(135deg, #fff0f0 0%, #ffd1d1 100%) !important; }
 
 @keyframes pulse-g {
   0%, 100% {
