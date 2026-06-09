@@ -46,12 +46,61 @@ function updateAIDashboard(vis) {
   }
 }
 
+function renderRoomSummary(vis) {
+  const bar = document.getElementById('room-summary-bar');
+  if (!bar) return;
+
+  if (!vis.length) {
+    bar.innerHTML = '<span class="rsb-title">🏥 병실 현황</span><span class="rsb-total">입실 환자 없음</span>';
+    return;
+  }
+
+  const byRoom = {};
+  vis.forEach(p => {
+    const key = p.room || '미지정';
+    if (!byRoom[key]) byRoom[key] = [];
+    byRoom[key].push(p);
+  });
+
+  const sorted = Object.entries(byRoom).sort((a, b) =>
+    (parseInt(a[0]) || 0) - (parseInt(b[0]) || 0)
+  );
+
+  const totalReady   = vis.filter(p => calcStatus(p).type === 'ready').length;
+  const totalSpecial = vis.filter(p => p.special === 'icu' || p.special === 'unstable').length;
+
+  const chips = sorted.map(([room, pts]) => {
+    const ready   = pts.filter(p => calcStatus(p).type === 'ready').length;
+    const special = pts.filter(p => p.special === 'icu' || p.special === 'unstable').length;
+    const waiting = pts.length - ready;
+
+    const cls = special > 0 ? 'rsb-chip has-special'
+              : ready > 0   ? 'rsb-chip has-ready'
+              : 'rsb-chip';
+
+    const parts = [`<span class="rsb-room">${room}호</span>`, `${pts.length}명`];
+    if (ready   > 0) parts.push(`<span class="rsb-ready">퇴실준비 ${ready}</span>`);
+    if (waiting > 0) parts.push(`<span class="rsb-wait">체류중 ${waiting}</span>`);
+    if (special > 0) parts.push(`<span class="rsb-special">⚠${special}</span>`);
+
+    return `<span class="${cls}">${parts.join('<span style="opacity:.4">·</span>')}</span>`;
+  }).join('');
+
+  bar.innerHTML = `
+    <span class="rsb-title">🏥 병실 현황</span>
+    <span class="rsb-total">전체 <strong style="color:#E2E8F0">${vis.length}</strong>명 &nbsp;·&nbsp; 퇴실준비 <strong style="color:#86EFAC">${totalReady}</strong> &nbsp;·&nbsp; 특이 <strong style="color:#FDB77A">${totalSpecial}</strong></span>
+    <span class="rsb-divider"></span>
+    ${chips}
+  `;
+}
+
 function render() {
   const list  = document.getElementById('ward-list');
   const empty = document.getElementById('empty-state');
   const vis   = visible();
 
   updateAIDashboard(vis);
+  renderRoomSummary(vis);
 
   if (!vis.length) { empty.style.display = 'flex'; list.innerHTML = ''; return; }
   empty.style.display = 'none';
