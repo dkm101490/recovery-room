@@ -231,7 +231,7 @@ function renderPatients() {
     <div class="ward-group">
       <div class="ward-group-label">${ward}</div>
       <div class="ward-group-cards">
-        ${list.map(p => renderCard(p)).join('')}
+        ${list.sort((a, b) => (parseInt(a.room)||0) - (parseInt(b.room)||0)).map(p => renderCard(p)).join('')}
       </div>
     </div>
   `).join('');

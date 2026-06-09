@@ -55,21 +55,23 @@ function renderRoomSummary(vis) {
     return;
   }
 
-  const byRoom = {};
+  const byWard = {};
   vis.forEach(p => {
-    const key = p.room || '미지정';
-    if (!byRoom[key]) byRoom[key] = [];
-    byRoom[key].push(p);
+    const key = p.ward || '미지정';
+    if (!byWard[key]) byWard[key] = [];
+    byWard[key].push(p);
   });
 
-  const sorted = Object.entries(byRoom).sort((a, b) =>
-    (parseInt(a[0]) || 0) - (parseInt(b[0]) || 0)
-  );
+  const sorted = Object.entries(byWard).sort((a, b) => {
+    const floorDiff = extractFloor(a[0]) - extractFloor(b[0]);
+    if (floorDiff !== 0) return floorDiff;
+    return extractSubWard(a[0]) - extractSubWard(b[0]);
+  });
 
   const totalReady   = vis.filter(p => calcStatus(p).type === 'ready').length;
   const totalSpecial = vis.filter(p => p.special === 'icu' || p.special === 'unstable').length;
 
-  const chips = sorted.map(([room, pts]) => {
+  const chips = sorted.map(([ward, pts]) => {
     const ready   = pts.filter(p => calcStatus(p).type === 'ready').length;
     const special = pts.filter(p => p.special === 'icu' || p.special === 'unstable').length;
     const waiting = pts.length - ready;
@@ -78,7 +80,7 @@ function renderRoomSummary(vis) {
               : ready > 0   ? 'rsb-chip has-ready'
               : 'rsb-chip';
 
-    const parts = [`<span class="rsb-room">${room}호</span>`, `${pts.length}명`];
+    const parts = [`<span class="rsb-room">${ward}</span>`, `${pts.length}명`];
     if (ready   > 0) parts.push(`<span class="rsb-ready">퇴실준비 ${ready}</span>`);
     if (waiting > 0) parts.push(`<span class="rsb-wait">체류중 ${waiting}</span>`);
     if (special > 0) parts.push(`<span class="rsb-special">⚠${special}</span>`);
