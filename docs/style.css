@@ -566,17 +566,25 @@ header h1 {
 .w-main-msg b { color: #0F1F2E; }
 
 .w-drug-list {
-  list-style: none; margin-bottom: 10px;
-  display: flex; flex-direction: column; gap: 3px;
-  padding-left: 10px;
-  border-left: 2px solid #D8E4EE;
+  list-style: none; margin-bottom: 14px;
+  display: flex; flex-direction: column; gap: 0;
+  padding-left: 0;
+  border-left: none;
 }
 .w-drug-list li {
-  font-size: 0.81rem; color: #0E5C72;
+  font-size: 0.97rem;
+  font-weight: 600;
+  color: #1e293b;
   position: relative;
+  background: #EFF6FF;
+  border-radius: 6px;
+  border-left: 3px solid #3B82F6;
+  padding: 6px 12px;
+  margin-bottom: 8px;
 }
+.w-drug-list li:last-child { margin-bottom: 0; }
 .w-drug-list li::before { display: none; }
-.w-drug-list li b { color: #0F1F2E; }
+.w-drug-list li b { color: #1C3A6E; font-weight: 700; }
 
 .w-special {
   margin-top: 8px; padding: 7px 12px; border-radius: 3px;
