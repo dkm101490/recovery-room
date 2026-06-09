@@ -297,10 +297,10 @@ header h1 {
 .r-btn.drug {
   border-left: 3px solid #0891B2;
   color: #0E5C72;
-  background: #F0FBFF;
-  border-color: #BAE6FD;
+  background: #DBEAFE;
+  border-color: #93C5FD;
 }
-.r-btn.drug:hover { background: #E0F4FD; }
+.r-btn.drug:hover { background: #BFDBFE; }
 .r-btn.drug.given {
   border-left-color: #94A3B8;
   background: #F6F7F9;
@@ -312,10 +312,10 @@ header h1 {
 .r-btn.antiemetic {
   border-left: 3px solid #7C3AED;
   color: #5B21B6;
-  background: #FAF8FF;
-  border-color: #DDD6FE;
+  background: #EDE9FE;
+  border-color: #C4B5FD;
 }
-.r-btn.antiemetic:hover { background: #F3EEFF; }
+.r-btn.antiemetic:hover { background: #DDD6FE; }
 .r-btn.antiemetic.given {
   border-left-color: #94A3B8;
   background: #F6F7F9;
@@ -327,13 +327,13 @@ header h1 {
 .r-btn.special.warn {
   border-left: 3px solid #EA580C;
   color: #9A3412;
-  background: #FFFCF8;
-  border-color: #FED7AA;
+  background: #FEF3C7;
+  border-color: #FCD34D;
 }
-.r-btn.special.warn:hover { background: #FFF0E6; }
+.r-btn.special.warn:hover { background: #FDE68A; }
 .r-btn.special.warn.active {
-  background: #FEF0E4;
-  border-color: #FDBA74;
+  background: #FDE68A;
+  border-color: #FBBF24;
   color: #7C2D12;
   font-weight: 700;
 }
@@ -342,13 +342,13 @@ header h1 {
 .r-btn.special.danger {
   border-left: 3px solid #DC2626;
   color: #991B1B;
-  background: #FFFAFA;
-  border-color: #FECACA;
-}
-.r-btn.special.danger:hover { background: #FEF2F2; }
-.r-btn.special.danger.active {
   background: #FEE2E2;
   border-color: #FCA5A5;
+}
+.r-btn.special.danger:hover { background: #FECACA; }
+.r-btn.special.danger.active {
+  background: #FECACA;
+  border-color: #F87171;
   color: #7F1D1D;
   font-weight: 700;
 }
