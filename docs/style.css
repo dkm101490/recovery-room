@@ -215,14 +215,14 @@ header h1 {
   border-bottom: 1px solid #EEF1F5;
 }
 .r-identity { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 2px; }
-.r-name { font-size: 0.92rem; font-weight: 700; color: #0F1F2E; }
+.r-name { font-size: 1.15rem; font-weight: 700; color: #0F1F2E; }
 .r-reg  { font-size: 0.73rem; color: #6B7A8D; font-family: 'Courier New', 'D2Coding', monospace; }
 .r-room-badge {
   background: #EBF2FA;
   color: #1C3A6E;
   border-radius: 2px;
   padding: 1px 7px;
-  font-size: 0.67rem;
+  font-size: 0.82rem;
   font-weight: 700;
   border: 1px solid #BDD1EA;
 }
