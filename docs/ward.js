@@ -94,15 +94,6 @@ function renderRoomSummary(vis) {
   `;
 }
 
-function extractFloor(ward) {
-  const m = (ward || '').match(/(\d+)층/);
-  return m ? parseInt(m[1]) : 999;
-}
-function extractSubWard(ward) {
-  const m = (ward || '').match(/(\d+)병동/);
-  return m ? parseInt(m[1]) : 999;
-}
-
 function render() {
   const list  = document.getElementById('ward-list');
   const empty = document.getElementById('empty-state');
@@ -131,14 +122,16 @@ function render() {
     return (parseInt(a[0]) || 0) - (parseInt(b[0]) || 0);
   });
 
-  list.innerHTML = sorted.map(([room, roomPatients]) => `
+  list.innerHTML = sorted.map(([room, roomPatients]) => {
+    const wardLabel = (roomPatients[0] && roomPatients[0].ward) || '';
+    return `
     <div class="room-group">
-      <div class="room-group-label">${room}호</div>
+      <div class="room-group-label">${wardLabel ? wardLabel + ' &nbsp;·&nbsp; ' : ''}${room}호</div>
       <div class="room-group-cards">
         ${roomPatients.map(p => buildCard(p)).join('')}
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 function buildCard(p) {

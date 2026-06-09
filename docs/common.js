@@ -1,3 +1,12 @@
+function extractFloor(ward) {
+  const m = (ward || '').match(/(\d+)층/);
+  return m ? parseInt(m[1]) : 999;
+}
+function extractSubWard(ward) {
+  const m = (ward || '').match(/(\d+)병동/);
+  return m ? parseInt(m[1]) : 999;
+}
+
 function fmtTime(iso, withSec = false) {
   if (!iso) return null;
   const d = new Date(new Date(iso).getTime() + 9 * 3600000);

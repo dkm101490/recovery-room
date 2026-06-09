@@ -119,7 +119,13 @@ patientsRef.on('value', snapshot => {
   const data = snapshot.val() || {};
   patients = Object.entries(data)
     .map(([id, p]) => withEst({ id, ...p }))
-    .sort((a, b) => a.ward.localeCompare(b.ward) || new Date(b.admit_time) - new Date(a.admit_time));
+    .sort((a, b) => {
+      const floorDiff = extractFloor(a.ward) - extractFloor(b.ward);
+      if (floorDiff !== 0) return floorDiff;
+      const subDiff = extractSubWard(a.ward) - extractSubWard(b.ward);
+      if (subDiff !== 0) return subDiff;
+      return (parseInt(a.room)||0) - (parseInt(b.room)||0) || new Date(b.admit_time) - new Date(a.admit_time);
+    });
   renderPatients();
 });
 
@@ -215,7 +221,13 @@ function renderPatients() {
     byWard[p.ward].push(p);
   });
 
-  grid.innerHTML = Object.entries(byWard).map(([ward, list]) => `
+  grid.innerHTML = Object.entries(byWard)
+    .sort((a, b) => {
+      const floorDiff = extractFloor(a[0]) - extractFloor(b[0]);
+      if (floorDiff !== 0) return floorDiff;
+      return extractSubWard(a[0]) - extractSubWard(b[0]);
+    })
+    .map(([ward, list]) => `
     <div class="ward-group">
       <div class="ward-group-label">${ward}</div>
       <div class="ward-group-cards">
