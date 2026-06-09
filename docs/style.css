@@ -226,6 +226,20 @@ header h1 {
   font-weight: 700;
   border: 1px solid #BDD1EA;
 }
+.r-ready-badge {
+  background: #16A34A;
+  color: #fff;
+  border-radius: 4px;
+  padding: 2px 9px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  animation: ready-badge-pulse 1.8s ease-in-out infinite;
+}
+@keyframes ready-badge-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(22,163,74,0.5); }
+  50%       { opacity: 0.85; box-shadow: 0 0 0 5px rgba(22,163,74,0); }
+}
 .r-surgery { font-size: 0.81rem; color: #2C3E50; margin-bottom: 2px; font-weight: 500; }
 .r-meta    { font-size: 0.71rem; color: #8A98A8; margin-bottom: 6px; }
 

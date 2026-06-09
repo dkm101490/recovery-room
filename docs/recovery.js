@@ -262,6 +262,7 @@ function renderCard(p) {
         <span class="r-name">${p.name}</span>
         <span class="r-reg">${p.reg_no}</span>
         <span class="r-room-badge">${p.room}호</span>
+        ${st.type === 'ready' ? '<span class="r-ready-badge">✅ 퇴실준비완료</span>' : ''}
       </div>
       <div class="r-surgery">${p.surgery}</div>
       <div class="r-meta">입실 ${fmtTime(p.admit_time)} · ${elapsed}분 경과</div>
