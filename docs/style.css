@@ -537,7 +537,7 @@ header h1 {
   transition: box-shadow 0.15s;
   display: flex;
   flex-direction: column;
-  min-height: 310px;
+  min-height: 400px;
   overflow: hidden;
 }
 .w-card:hover {
@@ -549,20 +549,20 @@ header h1 {
 .w-card.status-red    { border-left-color: #DC2626; }
 .w-card.status-blue   { border-left-color: #2563A8; }
 
-.w-card-header { margin-bottom: 10px; }
-.w-patient-info { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 3px; }
-.w-name    { font-size: 0.92rem; font-weight: 700; color: #0F1F2E; }
-.w-reg     { font-size: 0.72rem; color: #6B7A8D; font-family: 'Courier New', 'D2Coding', monospace; }
+.w-card-header { margin-bottom: 16px; }
+.w-patient-info { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.w-name    { font-size: 1.65rem; font-weight: 800; color: #0F1F2E; letter-spacing: -0.02em; line-height: 1.2; }
+.w-reg     { font-size: 1rem; color: #4A5568; font-family: 'Courier New', 'D2Coding', monospace; font-weight: 500; }
 .w-ward-badge {
   background: #EBF2FA;
   color: #1C3A6E;
-  border-radius: 2px;
-  padding: 1px 7px;
-  font-size: 0.67rem;
+  border-radius: 3px;
+  padding: 3px 10px;
+  font-size: 0.9rem;
   font-weight: 700;
   border: 1px solid #BDD1EA;
 }
-.w-surgery { font-size: 0.82rem; color: #2C3E50; font-weight: 500; }
+.w-surgery { font-size: 1.1rem; color: #1C3A6E; font-weight: 600; line-height: 1.4; }
 
 .w-main-msg {
   font-size: 0.84rem; line-height: 1.85; color: #2C3E50; margin-bottom: 10px; padding-bottom: 0;
