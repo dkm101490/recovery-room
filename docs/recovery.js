@@ -213,8 +213,20 @@ async function undoDrug(event, id, field) {
   event.preventDefault();
   if (!confirm('투약 기록을 취소하시겠습니까?')) return;
   if (field === 'fentanyl_time') {
-    await db.ref(`patients/${id}/fentanyl_doses`).remove();
-    await db.ref(`patients/${id}`).update({ fentanyl_time: null });
+    const p = patients.find(x => x.id === id);
+    const doses = (p && p.fentanyl_doses) ? p.fentanyl_doses : {};
+    const sorted = Object.entries(doses).sort((a, b) => a[1].localeCompare(b[1]));
+    if (sorted.length <= 1) {
+      // 투약 기록이 1건 이하 → 전부 삭제
+      await db.ref(`patients/${id}/fentanyl_doses`).remove();
+      await db.ref(`patients/${id}`).update({ fentanyl_time: null });
+    } else {
+      // 마지막 투약만 삭제, 이전 기록 복원
+      const lastKey  = sorted[sorted.length - 1][0];
+      const prevTime = sorted[sorted.length - 2][1];
+      await db.ref(`patients/${id}/fentanyl_doses/${lastKey}`).remove();
+      await db.ref(`patients/${id}`).update({ fentanyl_time: prevTime });
+    }
   } else {
     await db.ref(`patients/${id}`).update({ [field]: null });
   }
