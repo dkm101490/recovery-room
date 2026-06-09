@@ -103,6 +103,20 @@ header h1 {
   color: #1A2535;
   transition: border-color 0.12s, box-shadow 0.12s;
 }
+.field-group select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%235A6A7A' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+  cursor: pointer;
+}
+.field-group select option {
+  background: white;
+  color: #1A2535;
+}
 .field-group input:focus, .field-group select:focus {
   border-color: #2563A8;
   background: white;
@@ -174,14 +188,14 @@ header h1 {
 .r-card.status-red    { border-left-color: #DC2626; }
 .r-card.status-blue   { border-left-color: #2563A8; }
 
-/* 바이탈 불안정 — 아주 미세한 연주황 틴트 */
+/* 바이탈 불안정 — 진한 앰버 틴트 */
 .card-bg-unstable {
-  background: #FFFCF5 !important;
+  background: #FEF3C2 !important;
   border-left-color: #EA580C !important;
 }
-/* 중환자실 입실 예정 — 아주 미세한 연분홍 틴트 */
+/* 중환자실 입실 예정 — 진한 로즈 틴트 */
 .card-bg-icu {
-  background: #FFF8F8 !important;
+  background: #FFD6D8 !important;
   border-left-color: #DC2626 !important;
 }
 
@@ -567,6 +581,7 @@ header h1 {
 .w-special {
   margin-top: 8px; padding: 7px 12px; border-radius: 3px;
   font-size: 0.81rem; font-weight: 600;
+  text-align: center;
 }
 .w-special.unstable {
   background: #FFFCF5;
@@ -582,18 +597,19 @@ header h1 {
 }
 
 .w-ready-banner {
-  margin-top: 10px; padding: 9px 14px;
+  margin-top: 12px; padding: 14px 20px;
   background: #F0FDF4;
   color: #15803D;
-  border: 1px solid #86EFAC;
-  border-left: 3px solid #16A34A;
-  border-radius: 3px;
-  font-size: 0.85rem; font-weight: 700; text-align: center;
-  animation: banner-pulse-g 2.2s ease-in-out infinite;
+  border: 1.5px solid #4ADE80;
+  border-left: 4px solid #16A34A;
+  border-radius: 4px;
+  font-size: 1.05rem; font-weight: 800; text-align: center;
+  letter-spacing: 0.02em;
+  animation: banner-pulse-g 2s ease-in-out infinite;
 }
 @keyframes banner-pulse-g {
-  0%, 100% { background: #F0FDF4; box-shadow: 0 0 0 0 rgba(22,163,74,0.32); }
-  50%       { background: #DCFCE7; box-shadow: 0 0 0 5px rgba(22,163,74,0); }
+  0%, 100% { background: #F0FDF4; box-shadow: 0 0 0 0 rgba(22,163,74,0.5); }
+  50%       { background: #BBFACA; box-shadow: 0 0 0 12px rgba(22,163,74,0); }
 }
 
 /* ══════════ AI HANDOVER MODAL ══════════ */
