@@ -2,6 +2,13 @@ let patients = [];
 let scheduledList = [];
 let currentTab = 'recovery';
 
+/* ── 시연용 Mock 환자 데이터 ── */
+const DEMO_PATIENTS = [
+  { reg_no: '1001', name: '홍길동',   surgery: '복강경 담낭절제술 (Laparoscopic Cholecystectomy)' },
+  { reg_no: '1002', name: '이순신',   surgery: '전립선 절제술 (Radical Prostatectomy)' },
+  { reg_no: '1003', name: '신사임당', surgery: '유방 보존술 (Breast Conserving Surgery)' },
+];
+
 const patientsRef = db.ref('patients');
 const scheduledRef = db.ref('scheduled_patients');
 
@@ -34,11 +41,23 @@ function switchTab(tab) {
 async function lookupPatient() {
   const reg = document.getElementById('f-reg').value.trim();
   if (!reg) return;
+  const msg = document.getElementById('lookup-msg');
+
+  /* 시연용 Mock 데이터 우선 확인 */
+  const demo = DEMO_PATIENTS.find(p => p.reg_no === reg);
+  if (demo) {
+    document.getElementById('f-name').value    = demo.name;
+    document.getElementById('f-surgery').value = demo.surgery;
+    msg.textContent = `✓ ${demo.name} 환자 정보 자동 입력됨`;
+    msg.className = 'lookup-msg success';
+    setTimeout(() => { msg.textContent = ''; msg.className = 'lookup-msg'; }, 3000);
+    return;
+  }
+
   const snapshot = await scheduledRef.once('value');
   const data = snapshot.val() || {};
   const all = Object.values(data);
   const p = all.find(p => p.reg_no === reg || p.name.includes(reg));
-  const msg = document.getElementById('lookup-msg');
   if (p) {
     document.getElementById('f-name').value    = p.name;
     document.getElementById('f-surgery').value = p.surgery;
@@ -231,6 +250,18 @@ async function deleteScheduled(id) {
   await db.ref(`scheduled_patients/${id}`).remove();
   loadScheduled();
 }
+
+/* ── 시연용 등록번호 자동완성 ── */
+document.getElementById('f-reg').addEventListener('input', function () {
+  const match = DEMO_PATIENTS.find(p => p.reg_no === this.value.trim());
+  if (match) {
+    document.getElementById('f-name').value    = match.name;
+    document.getElementById('f-surgery').value = match.surgery;
+  } else {
+    document.getElementById('f-name').value    = '';
+    document.getElementById('f-surgery').value = '';
+  }
+});
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.closest('.admit-form')) {
