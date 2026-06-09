@@ -152,7 +152,13 @@ function buildCard(p) {
   }
 
   const drugs = [];
-  if (p.fentanyl_time)    drugs.push(`구연산펜타닐 50mcg &nbsp;<b>${fmtTime(p.fentanyl_time)}</b> 투약`);
+  if (p.fentanyl_doses) {
+    Object.values(p.fentanyl_doses).sort().forEach(t =>
+      drugs.push(`구연산펜타닐 50mcg &nbsp;<b>${fmtTime(t)}</b> 투약`)
+    );
+  } else if (p.fentanyl_time) {
+    drugs.push(`구연산펜타닐 50mcg &nbsp;<b>${fmtTime(p.fentanyl_time)}</b> 투약`);
+  }
   if (p.pethidine_time)   drugs.push(`제일페티딘염산염 25mg &nbsp;<b>${fmtTime(p.pethidine_time)}</b> 투약`);
   if (p.ondansetron_time) drugs.push(`온세란주 4mg &nbsp;<b>${fmtTime(p.ondansetron_time)}</b> 투약`);
   if (p.mekool_time)      drugs.push(`멕쿨주 10mg &nbsp;<b>${fmtTime(p.mekool_time)}</b> 투약`);

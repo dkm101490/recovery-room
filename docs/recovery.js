@@ -197,6 +197,14 @@ async function recordDrug(id, field) {
   if (field === 'fentanyl_time') {
     const p = patients.find(x => x.id === id);
     if (p && p.fentanyl_time && (Date.now() - new Date(p.fentanyl_time)) < 15 * 60 * 1000) return;
+    const newTime = nowWithSec();
+    // 기존 fentanyl_time은 있지만 doses 이력이 없으면 (구 데이터) 마이그레이션
+    if (p && p.fentanyl_time && !p.fentanyl_doses) {
+      await db.ref(`patients/${id}/fentanyl_doses`).push(p.fentanyl_time);
+    }
+    await db.ref(`patients/${id}/fentanyl_doses`).push(newTime);
+    await db.ref(`patients/${id}`).update({ fentanyl_time: newTime });
+    return;
   }
   await db.ref(`patients/${id}`).update({ [field]: nowWithSec() });
 }
@@ -204,7 +212,12 @@ async function recordDrug(id, field) {
 async function undoDrug(event, id, field) {
   event.preventDefault();
   if (!confirm('투약 기록을 취소하시겠습니까?')) return;
-  await db.ref(`patients/${id}`).update({ [field]: null });
+  if (field === 'fentanyl_time') {
+    await db.ref(`patients/${id}/fentanyl_doses`).remove();
+    await db.ref(`patients/${id}`).update({ fentanyl_time: null });
+  } else {
+    await db.ref(`patients/${id}`).update({ [field]: null });
+  }
 }
 
 async function setSpecial(id, val) {
@@ -286,10 +299,12 @@ function renderCard(p) {
   const fElapsed  = fLast ? (Date.now() - fLast) : Infinity;
   const fCooldown = fElapsed < 15 * 60 * 1000;
   const fRemain   = fCooldown ? Math.ceil((15 * 60 * 1000 - fElapsed) / 60000) : 0;
-  const fClass    = !fLast ? '' : fCooldown ? 'given' : 'redosable';
+  const fClass      = !fLast ? '' : fCooldown ? 'given' : 'redosable';
+  const fDoseCount  = p.fentanyl_doses ? Object.keys(p.fentanyl_doses).length : (fLast ? 1 : 0);
+  const fCountLabel = fDoseCount > 1 ? ` (${fDoseCount}회)` : '';
   const fLabel    = !fLast ? ''
-    : fCooldown  ? ` ✓ ${fmtTime(p.fentanyl_time, true)} · ${fRemain}분 후 재투약`
-    :              ` ✓ ${fmtTime(p.fentanyl_time, true)} · 🔄 재투약 가능`;
+    : fCooldown  ? ` ✓ ${fmtTime(p.fentanyl_time, true)}${fCountLabel} · ${fRemain}분 후 재투약`
+    :              ` ✓ ${fmtTime(p.fentanyl_time, true)}${fCountLabel} · 🔄 재투약 가능`;
 
   return `
   <div class="r-card status-${st.color} ${bgClass}">
@@ -306,7 +321,9 @@ function renderCard(p) {
     </div>
 
     <div class="r-drug-tags">
-      ${drugTime('fentanyl_time')}${drugTime('pethidine_time')}
+      ${p.fentanyl_doses
+        ? Object.values(p.fentanyl_doses).sort().map(t => `<span class="drug-tag">${drugLabel('fentanyl_time')} ${fmtTime(t, true)}</span>`).join('')
+        : drugTime('fentanyl_time')}${drugTime('pethidine_time')}
       ${drugTime('ondansetron_time')}${drugTime('mekool_time')}
     </div>
 
