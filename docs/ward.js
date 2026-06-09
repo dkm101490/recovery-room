@@ -94,6 +94,15 @@ function renderRoomSummary(vis) {
   `;
 }
 
+function extractFloor(ward) {
+  const m = (ward || '').match(/(\d+)층/);
+  return m ? parseInt(m[1]) : 999;
+}
+function extractSubWard(ward) {
+  const m = (ward || '').match(/(\d+)병동/);
+  return m ? parseInt(m[1]) : 999;
+}
+
 function render() {
   const list  = document.getElementById('ward-list');
   const empty = document.getElementById('empty-state');
@@ -113,9 +122,13 @@ function render() {
   });
 
   const sorted = Object.entries(byRoom).sort((a, b) => {
-    const numA = parseInt(a[0]) || 0;
-    const numB = parseInt(b[0]) || 0;
-    return numA - numB;
+    const wardA = (a[1][0] && a[1][0].ward) || '';
+    const wardB = (b[1][0] && b[1][0].ward) || '';
+    const floorDiff = extractFloor(wardA) - extractFloor(wardB);
+    if (floorDiff !== 0) return floorDiff;
+    const subDiff = extractSubWard(wardA) - extractSubWard(wardB);
+    if (subDiff !== 0) return subDiff;
+    return (parseInt(a[0]) || 0) - (parseInt(b[0]) || 0);
   });
 
   list.innerHTML = sorted.map(([room, roomPatients]) => `

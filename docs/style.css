@@ -523,7 +523,9 @@ header h1 {
 .room-group-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 10px;
+  grid-auto-rows: 500px;
+  gap: 12px;
+  align-items: stretch;
 }
 
 /* ── Ward Card ── */
@@ -537,7 +539,7 @@ header h1 {
   transition: box-shadow 0.15s;
   display: flex;
   flex-direction: column;
-  min-height: 400px;
+  height: 100%;
   overflow: hidden;
 }
 .w-card:hover {
