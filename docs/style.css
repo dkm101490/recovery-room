@@ -318,6 +318,19 @@ header h1 {
   color: #64748B;
   border-color: #CBD5E1;
 }
+.r-btn.drug.redosable {
+  border-left: 3px solid #16A34A;
+  color: #14532D;
+  background: #DCFCE7;
+  border-color: #86EFAC;
+  font-weight: 600;
+  animation: redosable-pulse 2s ease-in-out infinite;
+}
+.r-btn.drug.redosable:hover { background: #BBF7D0; }
+@keyframes redosable-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(22,163,74,0.35); }
+  50%       { box-shadow: 0 0 0 4px rgba(22,163,74,0); }
+}
 
 /* Antiemetic ── 바이올렛 좌측 바 */
 .r-btn.antiemetic {
