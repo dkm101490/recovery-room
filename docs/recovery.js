@@ -227,14 +227,30 @@ function renderPatients() {
       if (floorDiff !== 0) return floorDiff;
       return extractSubWard(a[0]) - extractSubWard(b[0]);
     })
-    .map(([ward, list]) => `
-    <div class="ward-group">
-      <div class="ward-group-label">${ward}</div>
-      <div class="ward-group-cards">
-        ${list.sort((a, b) => (parseInt(a.room)||0) - (parseInt(b.room)||0)).map(p => renderCard(p)).join('')}
-      </div>
-    </div>
-  `).join('');
+    .map(([ward, list]) => {
+      const byRoom = {};
+      list.forEach(p => {
+        const key = p.room || '미지정';
+        if (!byRoom[key]) byRoom[key] = [];
+        byRoom[key].push(p);
+      });
+      const roomGroups = Object.entries(byRoom)
+        .sort((a, b) => (parseInt(a[0])||0) - (parseInt(b[0])||0))
+        .map(([room, roomList]) => `
+          <div class="room-subgroup">
+            <div class="room-subgroup-label">${room}호</div>
+            <div class="ward-group-cards">
+              ${roomList.map(p => renderCard(p)).join('')}
+            </div>
+          </div>
+        `).join('');
+      return `
+        <div class="ward-group">
+          <div class="ward-group-label">${ward}</div>
+          ${roomGroups}
+        </div>
+      `;
+    }).join('');
 }
 
 function renderCard(p) {

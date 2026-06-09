@@ -152,7 +152,7 @@ header h1 {
   color: #1C3A6E;
 }
 
-.ward-group { margin-bottom: 20px; }
+.ward-group { margin-bottom: 24px; }
 .ward-group-label {
   font-size: 0.72rem;
   font-weight: 700;
@@ -161,6 +161,17 @@ header h1 {
   padding: 5px 10px;
   border-left: 3px solid #2563A8;
   margin-bottom: 10px;
+  letter-spacing: 0.02em;
+}
+.room-subgroup { margin-bottom: 14px; }
+.room-subgroup-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #4A5568;
+  background: #F4F6F9;
+  padding: 3px 10px;
+  border-left: 2px solid #94A3B8;
+  margin-bottom: 8px;
   letter-spacing: 0.02em;
 }
 .ward-group-cards {
