@@ -280,6 +280,12 @@ header h1 {
   font-size: 0.67rem;
   font-weight: 600;
   border: 1px solid #BAE6FD;
+  cursor: context-menu;
+  user-select: none;
+}
+.drug-tag:hover {
+  background: #E0F2FE;
+  border-color: #7DD3FC;
 }
 
 .r-actions { padding: 8px 12px 12px; display: flex; flex-direction: column; gap: 4px; }

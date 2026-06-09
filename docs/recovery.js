@@ -209,27 +209,26 @@ async function recordDrug(id, field) {
   await db.ref(`patients/${id}`).update({ [field]: nowWithSec() });
 }
 
-async function undoDrug(event, id, field) {
+async function undoFentanylDose(event, id, doseKey) {
+  event.preventDefault();
+  if (!confirm('이 투약 기록을 취소하시겠습니까?')) return;
+  const p = patients.find(x => x.id === id);
+  await db.ref(`patients/${id}/fentanyl_doses/${doseKey}`).remove();
+  const remaining = p && p.fentanyl_doses
+    ? Object.entries(p.fentanyl_doses).filter(([k]) => k !== doseKey)
+    : [];
+  if (remaining.length === 0) {
+    await db.ref(`patients/${id}`).update({ fentanyl_time: null });
+  } else {
+    const latest = remaining.sort((a, b) => a[1].localeCompare(b[1])).pop()[1];
+    await db.ref(`patients/${id}`).update({ fentanyl_time: latest });
+  }
+}
+
+async function undoDrugField(event, id, field) {
   event.preventDefault();
   if (!confirm('투약 기록을 취소하시겠습니까?')) return;
-  if (field === 'fentanyl_time') {
-    const p = patients.find(x => x.id === id);
-    const doses = (p && p.fentanyl_doses) ? p.fentanyl_doses : {};
-    const sorted = Object.entries(doses).sort((a, b) => a[1].localeCompare(b[1]));
-    if (sorted.length <= 1) {
-      // 투약 기록이 1건 이하 → 전부 삭제
-      await db.ref(`patients/${id}/fentanyl_doses`).remove();
-      await db.ref(`patients/${id}`).update({ fentanyl_time: null });
-    } else {
-      // 마지막 투약만 삭제, 이전 기록 복원
-      const lastKey  = sorted[sorted.length - 1][0];
-      const prevTime = sorted[sorted.length - 2][1];
-      await db.ref(`patients/${id}/fentanyl_doses/${lastKey}`).remove();
-      await db.ref(`patients/${id}`).update({ fentanyl_time: prevTime });
-    }
-  } else {
-    await db.ref(`patients/${id}`).update({ [field]: null });
-  }
+  await db.ref(`patients/${id}`).update({ [field]: null });
 }
 
 async function setSpecial(id, val) {
@@ -304,7 +303,9 @@ function renderCard(p) {
     else estLabel = `예상 퇴실 ${fmtTime(p.estimated_discharge)} (약 ${diffMin}분)`;
   }
 
-  const drugTime = field => p[field] ? `<span class="drug-tag">${drugLabel(field)} ${fmtTime(p[field], true)}</span>` : '';
+  const drugTime = field => p[field]
+    ? `<span class="drug-tag" oncontextmenu="undoDrugField(event,'${p.id}','${field}')" title="우클릭: 투약 취소">${drugLabel(field)} ${fmtTime(p[field], true)}</span>`
+    : '';
 
   // 펜타닐 15분 쿨다운
   const fLast     = p.fentanyl_time ? new Date(p.fentanyl_time) : null;
@@ -334,37 +335,32 @@ function renderCard(p) {
 
     <div class="r-drug-tags">
       ${p.fentanyl_doses
-        ? Object.values(p.fentanyl_doses).sort().map(t => `<span class="drug-tag">${drugLabel('fentanyl_time')} ${fmtTime(t, true)}</span>`).join('')
-        : drugTime('fentanyl_time')}${drugTime('pethidine_time')}
+        ? Object.entries(p.fentanyl_doses).sort((a,b)=>a[1].localeCompare(b[1])).map(([key,t]) =>
+            `<span class="drug-tag" oncontextmenu="undoFentanylDose(event,'${p.id}','${key}')" title="우클릭: 이 투약 취소">펜타닐 ${fmtTime(t, true)}</span>`
+          ).join('')
+        : drugTime('fentanyl_time')}
+      ${drugTime('pethidine_time')}
       ${drugTime('ondansetron_time')}${drugTime('mekool_time')}
     </div>
 
     <div class="r-actions">
       <div class="r-btn-row">
         <button class="r-btn drug ${fClass}"
-          onclick="recordDrug('${p.id}','fentanyl_time')"
-          oncontextmenu="undoDrug(event,'${p.id}','fentanyl_time')"
-          title="우클릭: 투약 취소">
+          onclick="recordDrug('${p.id}','fentanyl_time')">
           구연산펜타닐 50mcg${fLabel}
         </button>
         <button class="r-btn drug ${p.pethidine_time?'given':''}"
-          onclick="recordDrug('${p.id}','pethidine_time')"
-          oncontextmenu="undoDrug(event,'${p.id}','pethidine_time')"
-          title="우클릭: 투약 취소">
+          onclick="recordDrug('${p.id}','pethidine_time')">
           제일페티딘염산염 25mg${p.pethidine_time ? ` ✓ ${fmtTime(p.pethidine_time, true)}` : ''}
         </button>
       </div>
       <div class="r-btn-row">
         <button class="r-btn antiemetic ${p.ondansetron_time?'given':''}"
-          onclick="recordDrug('${p.id}','ondansetron_time')"
-          oncontextmenu="undoDrug(event,'${p.id}','ondansetron_time')"
-          title="우클릭: 투약 취소">
+          onclick="recordDrug('${p.id}','ondansetron_time')">
           온세란주 4mg${p.ondansetron_time ? ` ✓ ${fmtTime(p.ondansetron_time, true)}` : ''}
         </button>
         <button class="r-btn antiemetic ${p.mekool_time?'given':''}"
-          onclick="recordDrug('${p.id}','mekool_time')"
-          oncontextmenu="undoDrug(event,'${p.id}','mekool_time')"
-          title="우클릭: 투약 취소">
+          onclick="recordDrug('${p.id}','mekool_time')">
           멕쿨주 10mg${p.mekool_time ? ` ✓ ${fmtTime(p.mekool_time, true)}` : ''}
         </button>
       </div>
