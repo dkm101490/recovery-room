@@ -639,8 +639,28 @@ header h1 {
 .w-drug-list li::before { display: none; }
 .w-drug-list li b { color: #1C3A6E; font-weight: 700; }
 
-.w-special {
+.w-card-actions {
   margin-top: auto;
+  padding: 10px 0 14px;
+}
+.w-ai-btn {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 4px;
+  border: 1.5px solid #DDD6FE;
+  border-left: 3px solid #553C9A;
+  background: #FAF8FF;
+  color: #4C1D95;
+  font-size: 0.88rem;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.w-ai-btn:hover { background: #F3EEFF; }
+
+.w-special {
+  margin-top: 0;
   padding: 14px 16px;
   border-radius: 0;
   font-size: 1.05rem;
@@ -662,7 +682,7 @@ header h1 {
 }
 
 .w-ready-banner {
-  margin-top: auto;
+  margin-top: 0;
   padding: 18px 20px;
   background: #F0FDF4;
   color: #15803D;

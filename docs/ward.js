@@ -189,6 +189,10 @@ function buildCard(p) {
 
     ${specialMsg}
     ${readyBanner}
+
+    <div class="w-card-actions">
+      <button class="w-ai-btn" onclick="showHandover('${p.id}')">🤖 AI 인계 요약</button>
+    </div>
   </div>`;
 }
 
