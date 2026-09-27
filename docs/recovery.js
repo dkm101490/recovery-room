@@ -115,18 +115,20 @@ function refreshAdmitTime() {
 refreshAdmitTime();
 setInterval(refreshAdmitTime, 60000);
 
-patientsRef.on('value', snapshot => {
-  const data = snapshot.val() || {};
-  patients = Object.entries(data)
-    .map(([id, p]) => withEst({ id, ...p }))
-    .sort((a, b) => {
-      const floorDiff = extractFloor(a.ward) - extractFloor(b.ward);
-      if (floorDiff !== 0) return floorDiff;
-      const subDiff = extractSubWard(a.ward) - extractSubWard(b.ward);
-      if (subDiff !== 0) return subDiff;
-      return (parseInt(a.room)||0) - (parseInt(b.room)||0) || new Date(b.admit_time) - new Date(a.admit_time);
-    });
-  renderPatients();
+onFirebaseReady(() => {
+  patientsRef.on('value', snapshot => {
+    const data = snapshot.val() || {};
+    patients = Object.entries(data)
+      .map(([id, p]) => withEst({ id, ...p }))
+      .sort((a, b) => {
+        const floorDiff = extractFloor(a.ward) - extractFloor(b.ward);
+        if (floorDiff !== 0) return floorDiff;
+        const subDiff = extractSubWard(a.ward) - extractSubWard(b.ward);
+        if (subDiff !== 0) return subDiff;
+        return (parseInt(a.room)||0) - (parseInt(b.room)||0) || new Date(b.admit_time) - new Date(a.admit_time);
+      });
+    renderPatients();
+  });
 });
 
 setInterval(renderPatients, 30000);

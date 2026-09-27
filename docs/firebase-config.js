@@ -16,3 +16,13 @@ const db = firebase.database();
 firebase.auth().signInAnonymously().catch(err => {
   console.error('Firebase 익명 인증 실패:', err);
 });
+
+// 인증이 완전히 끝난 뒤에만 콜백을 실행합니다.
+// (인증 전에 db.ref(...).on('value') 리스너를 걸면 permission_denied로
+//  리스너 자체가 영구적으로 취소되어, 나중에 인증이 끝나도 다시 살아나지 않습니다.)
+function onFirebaseReady(callback) {
+  if (firebase.auth().currentUser) { callback(); return; }
+  const unsubscribe = firebase.auth().onAuthStateChanged(user => {
+    if (user) { unsubscribe(); callback(); }
+  });
+}

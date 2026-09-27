@@ -9,11 +9,13 @@ db.ref('.info/connected').on('value', snap => {
   connDot.className = snap.val() ? 'conn-dot connected' : 'conn-dot disconnected';
 });
 
-patientsRef.on('value', snapshot => {
-  const data = snapshot.val() || {};
-  patients = Object.entries(data).map(([id, p]) => withEst({ id, ...p }));
-  render();
-  triggerAlerts();
+onFirebaseReady(() => {
+  patientsRef.on('value', snapshot => {
+    const data = snapshot.val() || {};
+    patients = Object.entries(data).map(([id, p]) => withEst({ id, ...p }));
+    render();
+    triggerAlerts();
+  });
 });
 
 setInterval(() => { render(); triggerAlerts(); }, 30000);
