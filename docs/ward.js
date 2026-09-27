@@ -28,7 +28,7 @@ function visible() {
 }
 
 // AI 실시간 분석 대시보드: 평균체류 / 침상정체는 실제 데이터 기반 계산 (2026-09-27 수정)
-const CONGESTION_THRESHOLD_MIN = 10; // 퇴실준비 후 이만큼 지나면 "지연"으로 간주
+const CONGESTION_THRESHOLD_MIN = 20; // 퇴실준비 후 이만큼 지나면 "지연"으로 간주
 
 function updateAIDashboard(vis) {
   const total = vis.length;
