@@ -57,7 +57,7 @@ function calcStatus(p) {
   if (!est) return { type: 'recovering', color: 'blue' };
 
   const diffMin = Math.round((new Date(est) - new Date()) / 60000);
-  if (diffMin <= 0)  return { type: 'ready',     color: 'green'  };
+  if (diffMin <= 0)  return { type: 'ready',     color: 'green',  diffMin };
   if (diffMin <= 10) return { type: 'soon',       color: 'yellow', diffMin };
   return                    { type: 'recovering', color: 'blue',   diffMin };
 }

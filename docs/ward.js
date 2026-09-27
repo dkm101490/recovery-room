@@ -27,6 +27,8 @@ function visible() {
   return selectedWard ? patients.filter(p => p.ward === selectedWard) : patients;
 }
 
+const CONGESTION_THRESHOLD_MIN = 10; // 퇴실준비 후 이만큼 지나면 "지연"으로 간주
+
 function updateAIDashboard(vis) {
   const total = vis.length;
   const ready = vis.filter(p => calcStatus(p).type === 'ready').length;
@@ -34,15 +36,41 @@ function updateAIDashboard(vis) {
   document.getElementById('ai-total').textContent = total + '명';
   document.getElementById('ai-ready').textContent = ready + '명';
 
+  // 평균체류: 실제 입실시간 기준 경과시간 평균 (랜덤 아님)
   const avgEl = document.getElementById('ai-avg-stay');
   const avgChip = avgEl.closest('.ai-chip');
   if (total > 0) {
-    const avg = Math.floor(Math.random() * 7) + 42; // 42~48분
-    avgEl.textContent = `${avg}분 (정상)`;
+    const totalElapsed = vis.reduce((sum, p) => sum + getElapsedMin(p.admit_time), 0);
+    const avg = Math.round(totalElapsed / total);
+    avgEl.textContent = `${avg}분`;
     avgChip.className = 'ai-chip ai-chip-blue';
   } else {
     avgEl.textContent = '계산 중';
     avgChip.className = 'ai-chip ai-chip-blue';
+  }
+
+  // 침상정체: 병동별로 "퇴실준비 완료" 후 CONGESTION_THRESHOLD_MIN분 넘게 대기 중인 환자 탐지
+  const congestEl = document.getElementById('ai-congestion');
+  const congestChip = congestEl.closest('.ai-chip');
+  const byWard = {};
+  patients.forEach(p => {
+    const st = calcStatus(p);
+    if (st.type !== 'ready') return;
+    const overdueMin = -st.diffMin; // diffMin <= 0 이므로 양수로 변환
+    if (overdueMin < CONGESTION_THRESHOLD_MIN) return;
+    const key = p.ward || '미지정';
+    if (!byWard[key] || overdueMin > byWard[key]) byWard[key] = overdueMin;
+  });
+
+  const worst = Object.entries(byWard).sort((a, b) => b[1] - a[1])[0];
+  if (worst) {
+    congestEl.innerHTML = `⚠&nbsp;침상정체&nbsp;<strong>주의</strong>&nbsp;<small>(${worst[0]} 인계 지연 ${worst[1]}분)</small>`;
+    congestChip.className = 'ai-chip ai-chip-orange';
+    congestChip.style.display = '';
+  } else {
+    congestEl.innerHTML = '침상정체&nbsp;<strong>없음</strong>';
+    congestChip.className = 'ai-chip ai-chip-gray';
+    congestChip.style.display = '';
   }
 }
 
