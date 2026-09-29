@@ -168,7 +168,7 @@ function generateWardBriefing(vis) {
     parts.push(`나머지 <strong>${recovering}명</strong>은 정상적으로 회복 관찰 중입니다.`);
   }
 
-  el.innerHTML = parts.join(' ');
+  el.innerHTML = parts.join('<br>');
 }
 
 function render() {
