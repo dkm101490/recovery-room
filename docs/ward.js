@@ -171,6 +171,69 @@ function generateWardBriefing(vis) {
   el.innerHTML = parts.join('<br>');
 }
 
+/* ═══ AI에게 현재 환자 상태 질문하기 (2026-09-29 추가) ═══ */
+function buildWardQAPrompt(question, vis) {
+  const lines = vis.map(p => {
+    const st = calcStatus(p);
+    const elapsed = getElapsedMin(p.admit_time);
+    const drugEntries = collectDrugEntries(p);
+    const drugStr = drugEntries.length
+      ? drugEntries.map(d => `${d.name} ${d.dose}(${fmtTime(d.time, true)})`).join(', ')
+      : '투약 없음';
+
+    let statusStr;
+    if (p.special === 'icu')      statusStr = '중환자실 입실 예정';
+    else if (p.special === 'unstable') statusStr = '바이탈 불안정 (퇴실 불가)';
+    else if (st.type === 'ready') statusStr = '퇴실 준비 완료';
+    else if (st.type === 'soon')  statusStr = `약 ${st.diffMin}분 후 퇴실 가능`;
+    else                          statusStr = `회복 관찰 중 (약 ${st.diffMin}분 더 필요)`;
+
+    return `- ${p.name}(${p.room}호, ${p.ward}): ${p.surgery}, 입실 ${elapsed}분 경과, 상태: ${statusStr}, 투약: ${drugStr}`;
+  }).join('\n');
+
+  return `당신은 회복실(PACU) 현황을 파악하고 있는 AI 어시스턴트입니다. 아래는 현재 화면에 표시된 환자들의 실시간 상태 정보입니다. 이 정보를 바탕으로 간호사의 질문에 정확하고 간결한 한국어로 답변해주세요.
+
+[현재 환자 현황]
+${lines || '(현재 표시된 환자 없음)'}
+
+[간호사의 질문]
+${question}
+
+[답변 지침]
+- 이모지나 마크다운 기호(*, #, -) 없이 순수 텍스트로 간결하게 답변
+- 위 목록에 있는 정보만 사용하고, 목록에 없는 내용은 추측하지 말고 모른다고 답할 것
+- 환자를 언급할 때는 이름과 병실 번호를 함께 말할 것`;
+}
+
+async function askWardAI() {
+  const input = document.getElementById('ward-ai-question');
+  const question = input.value.trim();
+  if (!question) return;
+
+  const apiKey = getGeminiApiKey();
+  if (!apiKey) {
+    alert('먼저 "⚙ Gemini API 키 설정"에서 Gemini API 키를 등록해주세요.');
+    return;
+  }
+
+  const answerEl = document.getElementById('ward-ai-answer');
+  const askBtn = document.getElementById('ward-ai-ask-btn');
+  answerEl.style.display = '';
+  answerEl.textContent = '✨ 생각 중...';
+  askBtn.disabled = true;
+
+  try {
+    const prompt = buildWardQAPrompt(question, visible());
+    const answer = await callGeminiHandover(prompt);
+    answerEl.textContent = answer;
+  } catch (e) {
+    console.error('AI 질문 실패:', e);
+    answerEl.textContent = '답변 생성에 실패했습니다.\n오류 내용: ' + (e.message || '알 수 없는 오류');
+  } finally {
+    askBtn.disabled = false;
+  }
+}
+
 function render() {
   const list  = document.getElementById('ward-list');
   const empty = document.getElementById('empty-state');

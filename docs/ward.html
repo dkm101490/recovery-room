@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>병동 모니터</title>
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body class="ward-page">
 
@@ -52,6 +52,20 @@
     <span class="ai-briefing-text" id="ai-briefing-text">환자 현황을 분석 중입니다...</span>
   </div>
 
+  <!-- ═══ AI에게 현재 환자 상태 질문하기 (2026-09-29 추가) ═══ -->
+  <div class="ai-qa-box">
+    <div class="ai-qa-header">
+      <span class="ai-qa-title">💬 AI에게 현재 환자 상태 질문하기</span>
+      <button class="hm-key-btn" onclick="promptGeminiApiKey()">⚙ Gemini API 키 설정</button>
+    </div>
+    <div class="ai-qa-input-row">
+      <input type="text" id="ward-ai-question" placeholder="예: 지금 퇴실 준비된 환자 누구야? / 중환자실 갈 환자는 몇 명이야?"
+        autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();askWardAI();}">
+      <button class="ai-qa-ask-btn" id="ward-ai-ask-btn" onclick="askWardAI()">질문하기</button>
+    </div>
+    <div class="ai-qa-answer" id="ward-ai-answer" style="display:none"></div>
+  </div>
+
   <div id="empty-state" class="empty-state">현재 회복실에 입실 중인 환자가 없습니다.</div>
   <div id="ward-list"></div>
 
@@ -80,6 +94,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="firebase-config.js?v=4"></script>
   <script src="common.js?v=11"></script>
-  <script src="ward.js?v=4"></script>
+  <script src="ward.js?v=5"></script>
 </body>
 </html>
