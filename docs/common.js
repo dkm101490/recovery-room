@@ -201,16 +201,17 @@ async function callGeminiHandover(promptText) {
   return text.trim();
 }
 
-function setHandoverBadge(state) {
+function setHandoverBadge(state, detail) {
   const el = document.getElementById('handover-badge');
   if (!el) return;
   const map = {
     rule:           '📋 규칙 기반 요약',
     loading:        '✨ Gemini AI 생성 중...',
     ai:             '✨ Gemini AI 생성',
-    fallback:       '📋 규칙 기반 요약 (Gemini 호출 실패)',
+    fallback:       '📋 규칙 기반 요약 (Gemini 호출 실패 — 마우스를 올려보세요)',
   };
   el.textContent = map[state] || '';
+  el.title = detail || '';
   el.className = 'hm-badge' + (state === 'ai' ? ' hm-badge-ai' : state === 'loading' ? ' hm-badge-loading' : '');
 }
 
@@ -305,7 +306,7 @@ function showHandover(id) {
       })
       .catch(err => {
         console.error('Gemini 인계 요약 생성 실패:', err);
-        setHandoverBadge('fallback');
+        setHandoverBadge('fallback', err && err.message);
       });
   } catch (e) {
     console.error('AI 인계 요약 오류:', e);
