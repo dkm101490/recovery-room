@@ -106,7 +106,8 @@ function getElapsedMin(admitTime) {
 /* ═══ Gemini API 연동 (2026-09-29 추가) ═══
    API 키는 GitHub에 올라가지 않고, 이 브라우저의 localStorage에만 저장됩니다.
    키가 없거나 호출이 실패하면 항상 기존 규칙 기반 요약으로 자동 전환됩니다. */
-const GEMINI_MODEL = 'gemini-3.8-flash';
+// 특정 버전 대신 "최신 안정 버전"을 가리키는 별칭을 우선 사용 (모델 지원 종료/과부하에 덜 취약함)
+const GEMINI_MODEL_CANDIDATES = ['gemini-flash-latest', 'gemini-3.8-flash'];
 
 function getGeminiApiKey() {
   try { return localStorage.getItem('gemini_api_key') || ''; }
@@ -177,8 +178,8 @@ ${drugLines}
 - 전체 6~10문장 이내로 간결하게 작성`;
 }
 
-async function callGeminiOnce(promptText, apiKey) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`;
+async function callGeminiOnce(promptText, apiKey, model) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
 
   // 15초 안에 응답이 없으면 무한 대기 대신 타임아웃 에러로 실패 처리
   const controller = new AbortController();
@@ -218,16 +219,20 @@ async function callGeminiHandover(promptText) {
   const apiKey = getGeminiApiKey();
   if (!apiKey) return null;
 
-  const delays = [0, 1500, 3000]; // 즉시, 1.5초 후, 3초 후 — 최대 3번 시도
   let lastErr;
-  for (let i = 0; i < delays.length; i++) {
-    if (delays[i]) await new Promise(r => setTimeout(r, delays[i]));
-    try {
-      return await callGeminiOnce(promptText, apiKey);
-    } catch (e) {
-      lastErr = e;
-      if (!e.retryable) throw e; // 재시도해도 소용없는 오류(키 오류 등)는 바로 실패 처리
+  // 모델별로 순서대로 시도 (특정 모델이 지원 종료/과부하여도 다른 모델로 자동 전환)
+  for (const model of GEMINI_MODEL_CANDIDATES) {
+    const delays = [0, 1500]; // 이 모델로 즉시 1번, 1.5초 후 재시도 1번
+    for (let i = 0; i < delays.length; i++) {
+      if (delays[i]) await new Promise(r => setTimeout(r, delays[i]));
+      try {
+        return await callGeminiOnce(promptText, apiKey, model);
+      } catch (e) {
+        lastErr = e;
+        if (!e.retryable) throw e; // 재시도해도 소용없는 오류(키 오류 등)는 바로 실패 처리
+      }
     }
+    // 이 모델은 재시도까지 다 실패 — 다음 후보 모델로 넘어감
   }
   throw lastErr;
 }
