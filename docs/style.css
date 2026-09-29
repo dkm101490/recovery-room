@@ -291,6 +291,46 @@ header h1 {
 .r-actions { padding: 8px 12px 12px; display: flex; flex-direction: column; gap: 4px; }
 .r-btn-row { display: flex; gap: 5px; flex-wrap: wrap; }
 
+/* ── 투약 기록 (약 선택 + 용량 선택) ── */
+.r-drug-adder {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 6px 8px;
+  margin-bottom: 4px;
+  background: #F7FAFD;
+  border: 1px solid #C8D2DE;
+  border-left: 3px solid #0891B2;
+  border-radius: 3px;
+}
+.r-drug-select,
+.r-drug-dose,
+.r-drug-custom-name,
+.r-drug-custom-dose {
+  padding: 5px 8px;
+  border: 1px solid #C8D2DE;
+  border-radius: 3px;
+  background: white;
+  font-size: 0.75rem;
+  font-family: inherit;
+  color: #2C3E50;
+}
+.r-drug-select      { flex: 1.4; min-width: 130px; }
+.r-drug-dose        { flex: 1; min-width: 90px; }
+.r-drug-custom-name { flex: 1.2; min-width: 100px; }
+.r-drug-custom-dose { flex: 0.8; min-width: 80px; }
+.r-btn.drug-add-btn {
+  flex: 0.8; min-width: 90px;
+  text-align: center;
+  border-left: 3px solid #0891B2;
+  color: #0E5C72;
+  background: #DBEAFE;
+  border-color: #93C5FD;
+  font-weight: 600;
+}
+.r-btn.drug-add-btn:hover { background: #BFDBFE; }
+
 /* ── 처방 오더 리스트 스타일 버튼 ── */
 .r-btn {
   flex: 1; min-width: 130px;

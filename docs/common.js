@@ -1,3 +1,32 @@
+/* ═══ 약물 카탈로그 (2026-09-29 추가: 회복실 투약 항목 확장) ═══
+   affectsDischarge: true인 약만 "퇴실 예상시간" 계산에 반영됨.
+   cooldownMin: 같은 약을 이 시간(분) 안에는 다시 기록하지 못하게 막음 (0이면 제한 없음). */
+const CUSTOM_DRUG_KEY = '기타(직접입력)';
+const DRUG_CATALOG = {
+  '구연산펜타닐':     { doses: ['50mcg', '25mcg'],    waitMin: 15, cooldownMin: 15, affectsDischarge: true },
+  '제일페티딘염산염': { doses: ['25mg', '12.5mg'],    waitMin: 15, cooldownMin: 0,  affectsDischarge: true },
+  '비니카핀':         { doses: ['0.5mg'],             waitMin: 0,  cooldownMin: 0,  affectsDischarge: false },
+  '온세란주':         { doses: ['4mg'],               waitMin: 10, cooldownMin: 0,  affectsDischarge: true },
+  '멕쿨주':           { doses: ['10mg'],              waitMin: 10, cooldownMin: 0,  affectsDischarge: true },
+};
+
+/* 환자 한 명의 투약 기록을 하나의 배열로 합침 (구버전 고정 필드 + 신버전 drugs 필드 모두 지원) */
+function collectDrugEntries(p) {
+  const entries = [];
+  if (p.fentanyl_doses) {
+    Object.values(p.fentanyl_doses).forEach(t => entries.push({ name: '구연산펜타닐', dose: '50mcg', time: t }));
+  } else if (p.fentanyl_time) {
+    entries.push({ name: '구연산펜타닐', dose: '50mcg', time: p.fentanyl_time });
+  }
+  if (p.pethidine_time)   entries.push({ name: '제일페티딘염산염', dose: '25mg', time: p.pethidine_time });
+  if (p.ondansetron_time) entries.push({ name: '온세란주', dose: '4mg', time: p.ondansetron_time });
+  if (p.mekool_time)      entries.push({ name: '멕쿨주', dose: '10mg', time: p.mekool_time });
+  if (p.drugs) {
+    Object.values(p.drugs).forEach(d => entries.push({ name: d.name, dose: d.dose, time: d.time }));
+  }
+  return entries.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+}
+
 function extractFloor(ward) {
   const m = (ward || '').match(/(\d+)층/);
   return m ? parseInt(m[1]) : 999;
@@ -42,6 +71,14 @@ function calcEstimatedDischarge(p) {
   check(p.pethidine_time, 15);
   check(p.ondansetron_time, 10);
   check(p.mekool_time, 10);
+
+  // 신규 drugs 필드: 카탈로그에 등록되고 퇴실계산에 반영되는 약만 반영
+  if (p.drugs) {
+    Object.values(p.drugs).forEach(d => {
+      const cat = DRUG_CATALOG[d.name];
+      if (cat && cat.affectsDischarge && cat.waitMin) check(d.time, cat.waitMin);
+    });
+  }
   return earliest.toISOString();
 }
 
@@ -74,18 +111,9 @@ function generateHandoverScript(p) {
       ? `${Math.floor(elapsed / 60)}시간 ${elapsed % 60}분`
       : `${elapsed}분`;
 
-    const drugs = [];
-    if (p.fentanyl_doses) {
-      const times = Object.values(p.fentanyl_doses).sort().map(t => fmtTime(t, true));
-      drugs.push(`구연산펜타닐 50mcg × ${times.length}회 (${times.join(', ')} 투약)`);
-    } else if (p.fentanyl_time) {
-      drugs.push(`구연산펜타닐 50mcg (${fmtTime(p.fentanyl_time, true)} 투약)`);
-    }
-    if (p.pethidine_time)   drugs.push(`제일페티딘염산염 25mg (${fmtTime(p.pethidine_time, true)} 투약)`);
-    if (p.ondansetron_time) drugs.push(`온세란주 4mg (${fmtTime(p.ondansetron_time, true)} 투약)`);
-    if (p.mekool_time)      drugs.push(`멕쿨주 10mg (${fmtTime(p.mekool_time, true)} 투약)`);
-    const drugStr = drugs.length
-      ? drugs.map(d => `  · ${d}`).join('\n')
+    const drugEntries = collectDrugEntries(p);
+    const drugStr = drugEntries.length
+      ? drugEntries.map(d => `  · ${d.name} ${d.dose} (${fmtTime(d.time, true)} 투약)`).join('\n')
       : '  · 별도 투약 없음';
 
     const footer = `\n\n병실: ${p.room}호 | 병동: ${p.ward}`;

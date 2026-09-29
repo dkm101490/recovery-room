@@ -233,6 +233,96 @@ async function undoDrugField(event, id, field) {
   await db.ref(`patients/${id}`).update({ [field]: null });
 }
 
+/* ═══ 신규 투약 기록 UI (2026-09-29 추가): 약 종류/용량을 직접 선택해서 기록 ═══ */
+function onDrugNameChange(id) {
+  const nameSel     = document.getElementById(`drug-name-${id}`).value;
+  const customName  = document.getElementById(`drug-custom-name-${id}`);
+  const doseSel     = document.getElementById(`drug-dose-${id}`);
+  const customDose  = document.getElementById(`drug-custom-dose-${id}`);
+
+  customDose.value = '';
+
+  if (nameSel === CUSTOM_DRUG_KEY) {
+    customName.style.display = '';
+    doseSel.style.display    = 'none';
+    customDose.style.display = '';
+  } else if (nameSel && DRUG_CATALOG[nameSel]) {
+    customName.style.display = 'none';
+    customName.value = '';
+    doseSel.style.display    = '';
+    customDose.style.display = 'none';
+    const doses = DRUG_CATALOG[nameSel].doses;
+    doseSel.innerHTML = `<option value="">용량 선택</option>`
+      + doses.map(d => `<option value="${d}">${d}</option>`).join('')
+      + `<option value="${CUSTOM_DRUG_KEY}">기타(직접입력)</option>`;
+  } else {
+    customName.style.display = 'none';
+    doseSel.style.display    = 'none';
+    customDose.style.display = 'none';
+  }
+}
+
+function onDrugDoseChange(id) {
+  const doseSel    = document.getElementById(`drug-dose-${id}`).value;
+  const customDose = document.getElementById(`drug-custom-dose-${id}`);
+  customDose.style.display = doseSel === CUSTOM_DRUG_KEY ? '' : 'none';
+  if (doseSel !== CUSTOM_DRUG_KEY) customDose.value = '';
+}
+
+async function recordGenericDrug(id) {
+  const nameSel = document.getElementById(`drug-name-${id}`).value;
+  if (!nameSel) { alert('약을 선택해주세요.'); return; }
+
+  let name = nameSel;
+  if (nameSel === CUSTOM_DRUG_KEY) {
+    name = document.getElementById(`drug-custom-name-${id}`).value.trim();
+    if (!name) { alert('약 이름을 입력해주세요.'); return; }
+  }
+
+  let dose;
+  if (nameSel === CUSTOM_DRUG_KEY) {
+    dose = document.getElementById(`drug-custom-dose-${id}`).value.trim();
+    if (!dose) { alert('용량을 입력해주세요.'); return; }
+  } else {
+    const doseSel = document.getElementById(`drug-dose-${id}`).value;
+    if (!doseSel) { alert('용량을 선택해주세요.'); return; }
+    if (doseSel === CUSTOM_DRUG_KEY) {
+      dose = document.getElementById(`drug-custom-dose-${id}`).value.trim();
+      if (!dose) { alert('용량을 입력해주세요.'); return; }
+    } else {
+      dose = doseSel;
+    }
+  }
+
+  // 쿨다운 체크 (카탈로그에 정의된 약만)
+  const catalogEntry = DRUG_CATALOG[nameSel];
+  if (catalogEntry && catalogEntry.cooldownMin) {
+    const p = patients.find(x => x.id === id);
+    const entries = (p && p.drugs) ? Object.values(p.drugs) : [];
+    const sameDrug = entries.filter(e => e.name === name).sort((a, b) => b.time.localeCompare(a.time));
+    if (sameDrug.length) {
+      const elapsedMs = Date.now() - new Date(sameDrug[0].time);
+      if (elapsedMs < catalogEntry.cooldownMin * 60000) {
+        const remain = Math.ceil((catalogEntry.cooldownMin * 60000 - elapsedMs) / 60000);
+        alert(`${name}은(는) 최근 투약 후 ${catalogEntry.cooldownMin}분이 지나야 재투약 기록이 가능해요. (${remain}분 남음)`);
+        return;
+      }
+    }
+  }
+
+  const time = nowWithSec();
+  await db.ref(`patients/${id}/drugs`).push({ name, dose, time });
+
+  document.getElementById(`drug-name-${id}`).value = '';
+  onDrugNameChange(id);
+}
+
+async function undoGenericDrug(event, id, key) {
+  event.preventDefault();
+  if (!confirm('이 투약 기록을 취소하시겠습니까?')) return;
+  await db.ref(`patients/${id}/drugs/${key}`).remove();
+}
+
 async function setSpecial(id, val) {
   await db.ref(`patients/${id}`).update({ special: val || null });
 }
@@ -309,18 +399,6 @@ function renderCard(p) {
     ? `<span class="drug-tag" oncontextmenu="undoDrugField(event,'${p.id}','${field}')" title="우클릭: 투약 취소">${drugLabel(field)} ${fmtTime(p[field], true)}</span>`
     : '';
 
-  // 펜타닐 15분 쿨다운
-  const fLast     = p.fentanyl_time ? new Date(p.fentanyl_time) : null;
-  const fElapsed  = fLast ? (Date.now() - fLast) : Infinity;
-  const fCooldown = fElapsed < 15 * 60 * 1000;
-  const fRemain   = fCooldown ? Math.ceil((15 * 60 * 1000 - fElapsed) / 60000) : 0;
-  const fClass      = !fLast ? '' : fCooldown ? 'given' : 'redosable';
-  const fDoseCount  = p.fentanyl_doses ? Object.keys(p.fentanyl_doses).length : (fLast ? 1 : 0);
-  const fCountLabel = fDoseCount > 1 ? ` (${fDoseCount}회)` : '';
-  const fLabel    = !fLast ? ''
-    : fCooldown  ? ` ✓ ${fmtTime(p.fentanyl_time, true)}${fCountLabel} · ${fRemain}분 후 재투약`
-    :              ` ✓ ${fmtTime(p.fentanyl_time, true)}${fCountLabel} · 🔄 재투약 가능`;
-
   return `
   <div class="r-card status-${st.color} ${bgClass}">
     <div class="r-top">
@@ -343,28 +421,24 @@ function renderCard(p) {
         : drugTime('fentanyl_time')}
       ${drugTime('pethidine_time')}
       ${drugTime('ondansetron_time')}${drugTime('mekool_time')}
+      ${p.drugs
+        ? Object.entries(p.drugs).sort((a,b)=>(a[1].time||'').localeCompare(b[1].time||'')).map(([key,d]) =>
+            `<span class="drug-tag" oncontextmenu="undoGenericDrug(event,'${p.id}','${key}')" title="우클릭: 이 투약 취소">${d.name} ${d.dose} ${fmtTime(d.time, true)}</span>`
+          ).join('')
+        : ''}
     </div>
 
     <div class="r-actions">
-      <div class="r-btn-row">
-        <button class="r-btn drug ${fClass}"
-          onclick="recordDrug('${p.id}','fentanyl_time')">
-          구연산펜타닐 50mcg${fLabel}
-        </button>
-        <button class="r-btn drug ${p.pethidine_time?'given':''}"
-          onclick="recordDrug('${p.id}','pethidine_time')">
-          제일페티딘염산염 25mg${p.pethidine_time ? ` ✓ ${fmtTime(p.pethidine_time, true)}` : ''}
-        </button>
-      </div>
-      <div class="r-btn-row">
-        <button class="r-btn antiemetic ${p.ondansetron_time?'given':''}"
-          onclick="recordDrug('${p.id}','ondansetron_time')">
-          온세란주 4mg${p.ondansetron_time ? ` ✓ ${fmtTime(p.ondansetron_time, true)}` : ''}
-        </button>
-        <button class="r-btn antiemetic ${p.mekool_time?'given':''}"
-          onclick="recordDrug('${p.id}','mekool_time')">
-          멕쿨주 10mg${p.mekool_time ? ` ✓ ${fmtTime(p.mekool_time, true)}` : ''}
-        </button>
+      <div class="r-drug-adder">
+        <select class="r-drug-select" id="drug-name-${p.id}" onchange="onDrugNameChange('${p.id}')">
+          <option value="">약 선택</option>
+          ${Object.keys(DRUG_CATALOG).map(n => `<option value="${n}">${n}</option>`).join('')}
+          <option value="${CUSTOM_DRUG_KEY}">기타 (직접입력)</option>
+        </select>
+        <input type="text" class="r-drug-custom-name" id="drug-custom-name-${p.id}" placeholder="약 이름 입력" style="display:none">
+        <select class="r-drug-dose" id="drug-dose-${p.id}" style="display:none" onchange="onDrugDoseChange('${p.id}')"></select>
+        <input type="text" class="r-drug-custom-dose" id="drug-custom-dose-${p.id}" placeholder="용량 입력" style="display:none">
+        <button class="r-btn drug-add-btn" onclick="recordGenericDrug('${p.id}')">💉 투약 기록</button>
       </div>
       <div class="r-btn-row">
         <button class="r-btn special warn ${p.special==='unstable'?'active':''}"
