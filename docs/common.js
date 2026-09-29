@@ -197,7 +197,7 @@ async function callGeminiOnce(promptText, apiKey, model) {
       signal: controller.signal,
     });
   } catch (e) {
-    if (e.name === 'AbortError') { const err = new Error('Gemini 응답이 15초 안에 오지 않아 시간 초과되었습니다.'); err.retryable = true; throw err; }
+    if (e.name === 'AbortError') { const err = new Error('Gemini 응답이 15초 안에 오지 않아 시간 초과되었습니다.'); err.retryable = true; err.tryNextModel = true; throw err; }
     throw new Error(`Gemini 요청 실패: ${e.message}`);
   } finally {
     clearTimeout(timeoutId);
@@ -206,7 +206,10 @@ async function callGeminiOnce(promptText, apiKey, model) {
   if (!res.ok) {
     const errBody = await res.text().catch(() => '');
     const err = new Error(`Gemini API 오류 (${res.status}): ${errBody.slice(0, 200)}`);
-    if (res.status === 503 || res.status === 429) err.retryable = true; // 일시적 과부하/한도초과는 재시도
+    err.status = res.status;
+    if (res.status === 503) err.retryable = true; // 일시적 과부하 — 같은 모델로 바로 재시도해볼 가치 있음
+    // 429(한도초과)/404(모델없음)/503은 같은 모델을 더 재시도해도 소용없으니 다음 후보 모델로 전환
+    if (res.status === 429 || res.status === 404 || res.status === 503) err.tryNextModel = true;
     throw err;
   }
   const data = await res.json();
@@ -220,19 +223,19 @@ async function callGeminiHandover(promptText) {
   if (!apiKey) return null;
 
   let lastErr;
-  // 모델별로 순서대로 시도 (특정 모델이 지원 종료/과부하여도 다른 모델로 자동 전환)
+  // 모델별로 순서대로 시도 (특정 모델이 지원 종료/과부하/한도초과여도 다른 모델로 자동 전환)
   for (const model of GEMINI_MODEL_CANDIDATES) {
-    const delays = [0, 1500]; // 이 모델로 즉시 1번, 1.5초 후 재시도 1번
+    const delays = [0, 1500]; // 이 모델로 즉시 1번, 1.5초 후 재시도 1번 (재시도 가치 있는 오류일 때만)
     for (let i = 0; i < delays.length; i++) {
       if (delays[i]) await new Promise(r => setTimeout(r, delays[i]));
       try {
         return await callGeminiOnce(promptText, apiKey, model);
       } catch (e) {
         lastErr = e;
-        if (!e.retryable) throw e; // 재시도해도 소용없는 오류(키 오류 등)는 바로 실패 처리
+        if (!e.retryable) break; // 같은 모델 재시도는 그만두고 다음 후보 모델로
       }
     }
-    // 이 모델은 재시도까지 다 실패 — 다음 후보 모델로 넘어감
+    if (!lastErr.tryNextModel) throw lastErr; // 키 오류 등 모델을 바꿔도 소용없는 오류는 바로 실패 처리
   }
   throw lastErr;
 }
