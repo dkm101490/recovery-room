@@ -297,10 +297,10 @@ header h1 {
   gap: 5px;
   flex-wrap: wrap;
   align-items: center;
-  padding: 6px 8px;
+  padding: 7px 8px;
   margin-bottom: 4px;
-  background: #F7FAFD;
-  border: 1px solid #C8D2DE;
+  background: #EFF9FB;
+  border: 1px solid #BFE3EB;
   border-left: 3px solid #0891B2;
   border-radius: 3px;
 }
@@ -308,13 +308,44 @@ header h1 {
 .r-drug-dose,
 .r-drug-custom-name,
 .r-drug-custom-dose {
-  padding: 5px 8px;
-  border: 1px solid #C8D2DE;
+  padding: 6px 10px;
+  border: 1px solid #BFE3EB;
   border-radius: 3px;
-  background: white;
   font-size: 0.75rem;
   font-family: inherit;
-  color: #2C3E50;
+  font-weight: 500;
+  outline: none;
+  background: #FBFEFF;
+  color: #1A2535;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+.r-drug-select,
+.r-drug-dose {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%230E5C72' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 26px;
+  cursor: pointer;
+}
+.r-drug-select option,
+.r-drug-dose option {
+  background: white;
+  color: #1A2535;
+}
+.r-drug-select:focus,
+.r-drug-dose:focus,
+.r-drug-custom-name:focus,
+.r-drug-custom-dose:focus {
+  border-color: #0891B2;
+  background: white;
+  box-shadow: 0 0 0 2px rgba(8,145,178,0.14);
+}
+.r-drug-custom-name::placeholder,
+.r-drug-custom-dose::placeholder {
+  color: #7B93A8;
 }
 .r-drug-select      { flex: 1.4; min-width: 130px; }
 .r-drug-dose        { flex: 1; min-width: 90px; }
