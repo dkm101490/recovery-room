@@ -309,13 +309,13 @@ header h1 {
 .r-drug-custom-name,
 .r-drug-custom-dose {
   padding: 6px 10px;
-  border: 1px solid #BFE3EB;
+  border: 1px solid #8FD4E0;
   border-radius: 3px;
   font-size: 0.75rem;
   font-family: inherit;
   font-weight: 500;
   outline: none;
-  background: #FBFEFF;
+  background: #E6F7FA;
   color: #1A2535;
   transition: border-color 0.12s, box-shadow 0.12s;
 }
