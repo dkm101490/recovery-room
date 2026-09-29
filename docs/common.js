@@ -106,7 +106,7 @@ function getElapsedMin(admitTime) {
 /* ═══ Gemini API 연동 (2026-09-29 추가) ═══
    API 키는 GitHub에 올라가지 않고, 이 브라우저의 localStorage에만 저장됩니다.
    키가 없거나 호출이 실패하면 항상 기존 규칙 기반 요약으로 자동 전환됩니다. */
-const GEMINI_MODEL = 'gemini-2.0-flash';
+const GEMINI_MODEL = 'gemini-3.8-flash';
 
 function getGeminiApiKey() {
   try { return localStorage.getItem('gemini_api_key') || ''; }
