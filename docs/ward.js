@@ -131,10 +131,12 @@ function generateWardBriefing(vis) {
   const el = document.getElementById('ai-briefing-text');
   if (!el) return;
 
-  const wardLabel = selectedWard || '전체 병동';
+  const wardLabel = selectedWard || '회복실';
 
   if (!vis.length) {
-    el.innerHTML = `현재 <strong>${wardLabel}</strong>에는 회복실에서 대기 중인 환자가 없습니다.`;
+    el.innerHTML = selectedWard
+      ? `현재 <strong>${wardLabel}</strong>에는 회복실에서 대기 중인 환자가 없습니다.`
+      : `현재 <strong>회복실</strong>에 대기 중인 환자가 없습니다.`;
     return;
   }
 
