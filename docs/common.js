@@ -177,10 +177,7 @@ ${drugLines}
 - 전체 6~10문장 이내로 간결하게 작성`;
 }
 
-async function callGeminiHandover(promptText) {
-  const apiKey = getGeminiApiKey();
-  if (!apiKey) return null;
-
+async function callGeminiOnce(promptText, apiKey) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`;
 
   // 15초 안에 응답이 없으면 무한 대기 대신 타임아웃 에러로 실패 처리
@@ -199,7 +196,7 @@ async function callGeminiHandover(promptText) {
       signal: controller.signal,
     });
   } catch (e) {
-    if (e.name === 'AbortError') throw new Error('Gemini 응답이 15초 안에 오지 않아 시간 초과되었습니다. (네트워크 또는 방화벽 문제일 수 있어요)');
+    if (e.name === 'AbortError') { const err = new Error('Gemini 응답이 15초 안에 오지 않아 시간 초과되었습니다.'); err.retryable = true; throw err; }
     throw new Error(`Gemini 요청 실패: ${e.message}`);
   } finally {
     clearTimeout(timeoutId);
@@ -207,12 +204,32 @@ async function callGeminiHandover(promptText) {
 
   if (!res.ok) {
     const errBody = await res.text().catch(() => '');
-    throw new Error(`Gemini API 오류 (${res.status}): ${errBody.slice(0, 200)}`);
+    const err = new Error(`Gemini API 오류 (${res.status}): ${errBody.slice(0, 200)}`);
+    if (res.status === 503 || res.status === 429) err.retryable = true; // 일시적 과부하/한도초과는 재시도
+    throw err;
   }
   const data = await res.json();
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) throw new Error('Gemini 응답에 내용이 없습니다.');
   return text.trim();
+}
+
+async function callGeminiHandover(promptText) {
+  const apiKey = getGeminiApiKey();
+  if (!apiKey) return null;
+
+  const delays = [0, 1500, 3000]; // 즉시, 1.5초 후, 3초 후 — 최대 3번 시도
+  let lastErr;
+  for (let i = 0; i < delays.length; i++) {
+    if (delays[i]) await new Promise(r => setTimeout(r, delays[i]));
+    try {
+      return await callGeminiOnce(promptText, apiKey);
+    } catch (e) {
+      lastErr = e;
+      if (!e.retryable) throw e; // 재시도해도 소용없는 오류(키 오류 등)는 바로 실패 처리
+    }
+  }
+  throw lastErr;
 }
 
 function setHandoverBadge(state, detail) {
