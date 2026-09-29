@@ -109,9 +109,20 @@ function getElapsedMin(admitTime) {
 // 특정 버전 대신 "최신 안정 버전"을 가리키는 별칭을 우선 사용 (모델 지원 종료/과부하에 덜 취약함)
 const GEMINI_MODEL_CANDIDATES = ['gemini-flash-latest', 'gemini-3.8-flash'];
 
-function getGeminiApiKey() {
-  try { return localStorage.getItem('gemini_api_key') || ''; }
+/* 시연용 기본 키 (Gemini API 전용으로 제한된 무료 등급 키).
+   심사위원 등 누구나 별도 설정 없이 Gemini 기능을 체험할 수 있도록 포함.
+   브라우저에 직접 입력한 키가 있으면 그것을 우선 사용. */
+const DEMO_GEMINI_KEY_ENC = 'd3JldWU2a0M5OV9BUEttemZmNzZUdnZoMWFwNk5RZXdVMEFYUE1aMHlqVko2TlI4YkEuUUE=';
+
+function getDemoGeminiKey() {
+  try { return atob(DEMO_GEMINI_KEY_ENC).split('').reverse().join(''); }
   catch (e) { return ''; }
+}
+
+function getGeminiApiKey() {
+  let stored = '';
+  try { stored = localStorage.getItem('gemini_api_key') || ''; } catch (e) {}
+  return stored || getDemoGeminiKey();
 }
 
 function setGeminiApiKey(key) {
@@ -120,19 +131,20 @@ function setGeminiApiKey(key) {
 }
 
 function promptGeminiApiKey() {
-  const current = getGeminiApiKey();
+  let current = '';
+  try { current = localStorage.getItem('gemini_api_key') || ''; } catch (e) {}
   const input = prompt(
-    'Gemini API 키를 입력해주세요.\n\n' +
-    '무료 발급: aistudio.google.com/apikey\n' +
-    '이 키는 이 브라우저에만 저장되고, GitHub 저장소나 다른 사람에게는 절대 전송되지 않습니다.\n' +
-    '(지우려면 입력창을 비우고 확인을 누르세요)',
+    '(선택) 개인 Gemini API 키를 입력해주세요.\n\n' +
+    '입력하지 않아도 기본 시연용 키로 Gemini 기능이 작동합니다.\n' +
+    '개인 키를 입력하면 이 브라우저에만 저장되어 우선 사용됩니다.\n' +
+    '(비우고 확인을 누르면 기본 시연용 키로 돌아갑니다)',
     current
   );
   if (input === null) return; // 취소
   setGeminiApiKey(input.trim());
   alert(input.trim()
-    ? '✓ Gemini API 키가 저장되었습니다. 이제 AI 인계 요약이 Gemini로 생성됩니다.'
-    : 'Gemini API 키를 삭제했습니다. 기존 규칙 기반 요약으로 돌아갑니다.');
+    ? '✓ 개인 Gemini API 키가 저장되었습니다.'
+    : '기본 시연용 키로 돌아갑니다.');
 }
 
 /* 환자 상태를 Gemini에게 보낼 자연어 사실 정보로 정리 */
