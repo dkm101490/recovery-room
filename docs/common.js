@@ -88,6 +88,10 @@ function generateHandoverScript(p) {
       ? drugs.map(d => `  · ${d}`).join('\n')
       : '  · 별도 투약 없음';
 
+    const footer = `\n\n병실: ${p.room}호 | 병동: ${p.ward}`;
+    const header = `안녕하세요, 선생님. 회복실입니다.\n${p.name} 환자분 관련해서 인계드리겠습니다.\n\n현재 ${p.surgery} 수술 후 입실하셨고, 회복실 체류 ${elapsedStr} 경과했습니다.\n\n회복실 투약 내역:\n${drugStr}`;
+
+    // 중환자실行 — 가장 긴급, 최우선
     if (p.special === 'icu') {
       return `안녕하세요, 중환자실입니다.
 ${p.name} 환자분 중환자실 입실 예정으로 인계드리겠습니다.
@@ -99,28 +103,40 @@ ${p.name} 환자분 중환자실 입실 예정으로 인계드리겠습니다.
 회복실 투약 내역:
 ${drugStr}
 
-침대 및 이송 준비 부탁드리겠습니다. 감사합니다.
-
-병실: ${p.room}호 | 병동: ${p.ward}`;
+침대 및 이송 준비 부탁드리겠습니다. 감사합니다.${footer}`;
     }
 
-    const vitalLine = p.special === 'unstable'
-      ? '바이탈이 한차례 흔들려 안정화 대기하느라 퇴실이 다소 지연되었으나,\n현재 안정화 완료되어 퇴실 가능한 상태입니다'
-      : '바이탈 stable하게 잘 유지되었습니다';
+    // 바이탈 불안정 — 아직 해제되지 않은 상태 (실제로 아직 퇴실 불가)
+    if (p.special === 'unstable') {
+      return `${header}
 
-    return `안녕하세요, 선생님. 회복실입니다.
-${p.name} 환자분 퇴실 준비 완료되어 인계드리겠습니다.
+⚠ 현재 바이탈이 불안정하여 안정화될 때까지 회복실에서 계속 관찰 중입니다.
+아직 퇴실 가능한 상태가 아니며, 안정화되는 대로 다시 인계드리겠습니다.
+미리 참고해주시고, 현재는 병실을 비워두지 않으셔도 됩니다.${footer}`;
+    }
 
-현재 ${p.surgery} 수술 후 입실하셨고,
-회복실 체류 ${elapsedStr} 만에 ${vitalLine}.
+    // 이하는 실제 회복 상태(calcStatus)에 따라 분기
+    const st = calcStatus(p);
 
-회복실 투약 내역:
-${drugStr}
+    if (st.type === 'ready') {
+      return `${header}
 
-마지막 투약 후 관찰 시간 모두 정상적으로 충족했습니다.
-환자분 지금 병동으로 이동하셔도 좋습니다.
+바이탈 stable하게 잘 유지되었고, 마지막 투약 후 관찰 시간도 모두 정상적으로 충족했습니다.
+퇴실 준비 완료되어 지금 병동으로 이동하셔도 좋습니다.${footer}`;
+    }
 
-병실: ${p.room}호 | 병동: ${p.ward}`;
+    if (st.type === 'soon') {
+      return `${header}
+
+바이탈 stable하게 잘 유지되고 있으며, 약 ${st.diffMin}분 후 관찰 시간이 충족되어 퇴실 가능할 예정입니다.
+미리 참고해주시면 감사하겠습니다.${footer}`;
+    }
+
+    // recovering — 아직 관찰 시간 많이 남음
+    return `${header}
+
+바이탈 stable하게 잘 유지되고 있으며, 현재 관찰 중입니다.
+마지막 투약 기준 약 ${st.diffMin}분 더 관찰 후 퇴실 가능할 예정으로, 확정되면 다시 인계드리겠습니다.${footer}`;
   } catch (e) {
     return '인계 스크립트 생성 중 오류가 발생했습니다.';
   }
