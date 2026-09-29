@@ -103,6 +103,117 @@ function getElapsedMin(admitTime) {
   return Math.floor((new Date() - new Date(admitTime)) / 60000);
 }
 
+/* ═══ Gemini API 연동 (2026-09-29 추가) ═══
+   API 키는 GitHub에 올라가지 않고, 이 브라우저의 localStorage에만 저장됩니다.
+   키가 없거나 호출이 실패하면 항상 기존 규칙 기반 요약으로 자동 전환됩니다. */
+const GEMINI_MODEL = 'gemini-2.0-flash';
+
+function getGeminiApiKey() {
+  try { return localStorage.getItem('gemini_api_key') || ''; }
+  catch (e) { return ''; }
+}
+
+function setGeminiApiKey(key) {
+  try { localStorage.setItem('gemini_api_key', key); }
+  catch (e) {}
+}
+
+function promptGeminiApiKey() {
+  const current = getGeminiApiKey();
+  const input = prompt(
+    'Gemini API 키를 입력해주세요.\n\n' +
+    '무료 발급: aistudio.google.com/apikey\n' +
+    '이 키는 이 브라우저에만 저장되고, GitHub 저장소나 다른 사람에게는 절대 전송되지 않습니다.\n' +
+    '(지우려면 입력창을 비우고 확인을 누르세요)',
+    current
+  );
+  if (input === null) return; // 취소
+  setGeminiApiKey(input.trim());
+  alert(input.trim()
+    ? '✓ Gemini API 키가 저장되었습니다. 이제 AI 인계 요약이 Gemini로 생성됩니다.'
+    : 'Gemini API 키를 삭제했습니다. 기존 규칙 기반 요약으로 돌아갑니다.');
+}
+
+/* 환자 상태를 Gemini에게 보낼 자연어 사실 정보로 정리 */
+function buildHandoverPrompt(p) {
+  const elapsed = getElapsedMin(p.admit_time);
+  const elapsedStr = elapsed >= 60 ? `${Math.floor(elapsed / 60)}시간 ${elapsed % 60}분` : `${elapsed}분`;
+
+  const drugEntries = collectDrugEntries(p);
+  const drugLines = drugEntries.length
+    ? drugEntries.map(d => `- ${d.name} ${d.dose} (${fmtTime(d.time, true)} 투약)`).join('\n')
+    : '- 투약 없음';
+
+  let statusFact;
+  if (p.special === 'icu') {
+    statusFact = '환자 상태가 좋지 않아 중환자실 입실이 필요한 상황';
+  } else if (p.special === 'unstable') {
+    statusFact = '바이탈이 아직 불안정하여 안정화될 때까지 회복실에서 계속 관찰해야 하는 상황 (아직 퇴실 불가능)';
+  } else {
+    const st = calcStatus(p);
+    if (st.type === 'ready')      statusFact = '바이탈이 안정적으로 잘 유지되었고 마지막 투약 후 관찰 시간도 충족되어 퇴실 준비가 완료된 상황';
+    else if (st.type === 'soon')  statusFact = `바이탈이 안정적이며 약 ${st.diffMin}분 후 관찰 시간이 충족되어 곧 퇴실 가능해지는 상황`;
+    else                          statusFact = `바이탈은 안정적이나 아직 관찰 시간이 남아 있어 약 ${st.diffMin}분 더 관찰이 필요한 상황`;
+  }
+
+  return `당신은 회복실(PACU) 간호사입니다. 아래 환자 정보를 바탕으로, 병동 담당 간호사에게 전화로 인계하듯 자연스럽고 전문적인 한국어 인계 멘트를 작성해주세요.
+
+[환자 정보]
+- 이름: ${p.name}
+- 수술명: ${p.surgery}
+- 회복실 체류 시간: ${elapsedStr}
+- 병실: ${p.room}호 / 병동: ${p.ward}
+- 투약 내역:
+${drugLines}
+- 현재 상태: ${statusFact}
+
+[작성 지침]
+- "안녕하세요, 선생님. 회복실입니다."로 시작할 것
+- 실제 간호사가 구두로 인계하듯 자연스러운 존댓말 문장으로 작성 (딱딱한 나열식 금지)
+- 투약 내역은 시간과 함께 자연스럽게 문장 속에 녹여서 언급
+- 현재 상태에 따라 퇴실 가능 여부를 분명하게 전달
+- 마지막 줄에 "병실: ${p.room}호 | 병동: ${p.ward}"를 그대로 추가할 것
+- 이모지나 마크다운 기호(*, #, -) 없이 순수 텍스트로만 작성
+- 전체 6~10문장 이내로 간결하게 작성`;
+}
+
+async function callGeminiHandover(promptText) {
+  const apiKey = getGeminiApiKey();
+  if (!apiKey) return null;
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: promptText }] }],
+      generationConfig: { temperature: 0.4, maxOutputTokens: 500 },
+    }),
+  });
+
+  if (!res.ok) {
+    const errBody = await res.text().catch(() => '');
+    throw new Error(`Gemini API 오류 (${res.status}): ${errBody.slice(0, 200)}`);
+  }
+  const data = await res.json();
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) throw new Error('Gemini 응답에 내용이 없습니다.');
+  return text.trim();
+}
+
+function setHandoverBadge(state) {
+  const el = document.getElementById('handover-badge');
+  if (!el) return;
+  const map = {
+    rule:           '📋 규칙 기반 요약',
+    loading:        '✨ Gemini AI 생성 중...',
+    ai:             '✨ Gemini AI 생성',
+    fallback:       '📋 규칙 기반 요약 (Gemini 호출 실패)',
+  };
+  el.textContent = map[state] || '';
+  el.className = 'hm-badge' + (state === 'ai' ? ' hm-badge-ai' : state === 'loading' ? ' hm-badge-loading' : '');
+}
+
 /* ═══ AI 인계 요약 ═══ */
 function generateHandoverScript(p) {
   try {
@@ -174,8 +285,28 @@ function showHandover(id) {
   try {
     const p = patients.find(pt => pt.id === id);
     if (!p) return;
+
+    // 항상 규칙 기반 요약을 즉시 보여주고 (지연 없음), 가능하면 Gemini로 자연스럽게 다시 생성
     document.getElementById('handover-text').textContent = generateHandoverScript(p);
     document.getElementById('handover-modal').classList.add('open');
+    setHandoverBadge('rule');
+
+    const apiKey = getGeminiApiKey();
+    if (!apiKey) return;
+
+    setHandoverBadge('loading');
+    callGeminiHandover(buildHandoverPrompt(p))
+      .then(text => {
+        // 모달이 그 사이 닫혔거나 다른 환자로 바뀌지 않았을 때만 반영
+        if (document.getElementById('handover-modal').classList.contains('open')) {
+          document.getElementById('handover-text').textContent = text;
+          setHandoverBadge('ai');
+        }
+      })
+      .catch(err => {
+        console.error('Gemini 인계 요약 생성 실패:', err);
+        setHandoverBadge('fallback');
+      });
   } catch (e) {
     console.error('AI 인계 요약 오류:', e);
   }
