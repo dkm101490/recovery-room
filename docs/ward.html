@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>병동 모니터</title>
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body class="ward-page">
 
@@ -66,6 +66,7 @@
         <span class="hm-badge" id="handover-badge"></span>
         <button class="hm-key-btn" onclick="promptGeminiApiKey()">⚙ Gemini API 키 설정</button>
       </div>
+      <div class="hm-badge-detail" id="handover-badge-detail" style="display:none"></div>
       <div class="hm-body" id="handover-text"></div>
       <div class="hm-footer">
         <button class="hm-copy-btn" onclick="copyHandover()">📋 복사</button>
@@ -78,7 +79,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="firebase-config.js?v=4"></script>
-  <script src="common.js?v=5"></script>
+  <script src="common.js?v=6"></script>
   <script src="ward.js?v=4"></script>
 </body>
 </html>
