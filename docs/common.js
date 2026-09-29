@@ -182,14 +182,28 @@ async function callGeminiHandover(promptText) {
   if (!apiKey) return null;
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: promptText }] }],
-      generationConfig: { temperature: 0.4, maxOutputTokens: 500 },
-    }),
-  });
+
+  // 15초 안에 응답이 없으면 무한 대기 대신 타임아웃 에러로 실패 처리
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+  let res;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: promptText }] }],
+        generationConfig: { temperature: 0.4, maxOutputTokens: 500 },
+      }),
+      signal: controller.signal,
+    });
+  } catch (e) {
+    if (e.name === 'AbortError') throw new Error('Gemini 응답이 15초 안에 오지 않아 시간 초과되었습니다. (네트워크 또는 방화벽 문제일 수 있어요)');
+    throw new Error(`Gemini 요청 실패: ${e.message}`);
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!res.ok) {
     const errBody = await res.text().catch(() => '');
