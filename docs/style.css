@@ -525,6 +525,32 @@ header h1 {
 .ai-chip-blue   { background: rgba(96,165,250,0.14); color: #93C5FD; border-color: rgba(96,165,250,0.22); }
 .ai-chip-orange { background: rgba(251,146,60,0.14); color: #FDB77A; border-color: rgba(251,146,60,0.22); }
 
+/* ══════════ AI 병동 브리핑 ══════════ */
+.ai-briefing {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 12px 20px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #EEF4FF 0%, #F6F1FF 100%);
+  border: 1px solid #D6E0F5;
+  border-left: 4px solid #6C7DFA;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(30,41,80,0.06);
+}
+.ai-briefing-icon {
+  font-size: 1.1rem;
+  line-height: 1.5;
+  flex-shrink: 0;
+}
+.ai-briefing-text {
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: #2A3552;
+}
+.ai-briefing-text strong { color: #4338CA; font-weight: 700; }
+.ai-briefing-text .briefing-special { color: #C2410C; font-weight: 700; }
+
 /* ══════════ WARD PAGE ══════════ */
 .ward-page   { background: #EBF0F5; color: #1A2535; }
 .ward-header { background: #1C3A6E; border-bottom: 2px solid #0F2347; }

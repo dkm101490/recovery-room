@@ -127,6 +127,50 @@ function renderRoomSummary(vis) {
   `;
 }
 
+function generateWardBriefing(vis) {
+  const el = document.getElementById('ai-briefing-text');
+  if (!el) return;
+
+  const wardLabel = selectedWard || '전체 병동';
+
+  if (!vis.length) {
+    el.innerHTML = `현재 <strong>${wardLabel}</strong>에는 회복실에서 대기 중인 환자가 없습니다.`;
+    return;
+  }
+
+  const nameList = list => {
+    const names = list.map(p => `${p.name} 님(${p.room}호)`);
+    if (names.length <= 3) return names.join(', ');
+    return names.slice(0, 3).join(', ') + ` 외 ${names.length - 3}명`;
+  };
+
+  const ready      = vis.filter(p => calcStatus(p).type === 'ready');
+  const soon       = vis.filter(p => calcStatus(p).type === 'soon');
+  const unstable   = vis.filter(p => p.special === 'unstable');
+  const icu        = vis.filter(p => p.special === 'icu');
+  const recovering = vis.length - ready.length - soon.length - unstable.length - icu.length;
+
+  const parts = [`현재 <strong>${wardLabel}</strong>에는 환자 <strong>${vis.length}명</strong>이 있습니다.`];
+
+  if (ready.length) {
+    parts.push(`이 중 <strong>${ready.length}명</strong>(${nameList(ready)})은 퇴실 준비가 완료되어 바로 인계 가능한 상태입니다.`);
+  }
+  if (icu.length || unstable.length) {
+    const specialBits = [];
+    if (icu.length)      specialBits.push(`중환자실 예정 ${icu.length}명(${nameList(icu)})`);
+    if (unstable.length) specialBits.push(`바이탈 불안정 ${unstable.length}명(${nameList(unstable)})`);
+    parts.push(`<span class="briefing-special">⚠ ${specialBits.join(', ')}</span>로 별도 관리가 필요합니다.`);
+  }
+  if (soon.length) {
+    parts.push(`<strong>${soon.length}명</strong>은 10분 이내 퇴실 준비가 완료될 예정입니다.`);
+  }
+  if (recovering > 0) {
+    parts.push(`나머지 <strong>${recovering}명</strong>은 정상적으로 회복 관찰 중입니다.`);
+  }
+
+  el.innerHTML = parts.join(' ');
+}
+
 function render() {
   const list  = document.getElementById('ward-list');
   const empty = document.getElementById('empty-state');
@@ -134,6 +178,7 @@ function render() {
 
   updateAIDashboard(vis);
   renderRoomSummary(vis);
+  generateWardBriefing(vis);
 
   if (!vis.length) { empty.style.display = 'flex'; list.innerHTML = ''; return; }
   empty.style.display = 'none';
